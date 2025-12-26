@@ -44,7 +44,7 @@ function App() {
           Acesse sua conta
         </h1>
         <p className="text-[#4A5568] text-sm mb-6">
-          Entre com suas credenciais para operar o sistema.
+          Utilize e-mail e senha de cadastro.
         </p>
 
         <form onSubmit={handleLogin} className="space-y-4">
@@ -81,7 +81,7 @@ function App() {
             disabled={loading}
             className="w-full bg-[#2D6A4F] hover:opacity-90 text-white font-medium py-2.5 rounded-md transition-all shadow-sm disabled:opacity-50"
           >
-            {loading ? 'Autenticando...' : 'Entrar no Sistema'}
+            {loading ? 'Autenticando...' : 'Entrar'}
           </button>
         </form>
       </div>
