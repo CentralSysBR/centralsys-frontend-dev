@@ -2,22 +2,43 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, ShoppingCart, Package, LogOut, 
-  Calculator, History, Menu, X 
+  Calculator, History, Menu, X, Lock, Unlock, AlertCircle
 } from 'lucide-react';
 import logo from '../assets/logo_full_color.svg';
+import { api } from '../services/api';
+import { ModalFecharCaixa } from '../components/ModalFecharCaixa';
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const [userName, setUserName] = useState('');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [caixaAtivo, setCaixaAtivo] = useState<any>(null);
+  const [isModalFecharOpen, setIsModalFecharOpen] = useState(false);
+  const [loadingCaixa, setLoadingCaixa] = useState(true);
 
   useEffect(() => {
+    // 1. Carregar dados do usuário
     const userStorage = localStorage.getItem('@centralsys:user');
     if (userStorage) {
       const user = JSON.parse(userStorage);
       setUserName(user.nome);
     }
+    
+    // 2. Verificar status do caixa ao entrar
+    verificarStatusCaixa();
   }, []);
+
+  async function verificarStatusCaixa() {
+    try {
+      setLoadingCaixa(true);
+      const res = await api.get('/caixas/aberto');
+      setCaixaAtivo(res.data.data);
+    } catch (error) {
+      console.error("Erro ao validar caixa:", error);
+    } finally {
+      setLoadingCaixa(false);
+    }
+  }
 
   function handleLogout() {
     localStorage.clear();
@@ -34,35 +55,47 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
-      {/* HEADER MOBILE & DESKTOP */}
+      {/* HEADER */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-30 px-4 py-3">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <img src={logo} alt="Logo" className="h-9 w-auto" />
           
-          <button 
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="p-2 hover:bg-gray-100 rounded-lg lg:hidden"
-          >
-            {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
-          </button>
+          <div className="flex items-center gap-2 lg:gap-6">
+            {/* Status do Caixa no Header (Desktop) */}
+            {!loadingCaixa && (
+              <div className="hidden md:flex items-center gap-3 px-4 py-1.5 rounded-full border border-gray-100 bg-gray-50">
+                <div className={`w-2 h-2 rounded-full ${caixaAtivo ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
+                <span className="text-[11px] font-bold text-gray-500 uppercase tracking-tight">
+                  Caixa {caixaAtivo ? 'Operando' : 'Fechado'}
+                </span>
+              </div>
+            )}
 
-          <div className="hidden lg:flex items-center gap-4 text-sm font-medium text-gray-600">
-            <span>Olá, {userName}</span>
-            <button onClick={handleLogout} className="text-red-500 hover:text-red-600 flex items-center gap-1">
-              <LogOut size={18} /> Sair
+            <button 
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="p-2 hover:bg-gray-100 rounded-lg lg:hidden text-gray-600"
+            >
+              {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
             </button>
+
+            <div className="hidden lg:flex items-center gap-4 text-sm font-medium text-gray-600 border-l pl-6">
+              <span>Olá, {userName}</span>
+              <button onClick={handleLogout} className="text-red-500 hover:text-red-600 flex items-center gap-1 transition-colors">
+                <LogOut size={18} /> Sair
+              </button>
+            </div>
           </div>
         </div>
       </header>
 
       <div className="flex max-w-7xl mx-auto">
-        {/* SIDEBAR (DESKTOP) / DRAWER (MOBILE) */}
+        {/* ASIDE / SIDEBAR */}
         <aside className={`
           fixed inset-y-0 left-0 z-40 w-64 bg-[#1A2B3C] text-white transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0
           ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}
         `}>
           <div className="p-6 lg:hidden flex justify-between items-center border-b border-gray-700">
-            <span className="font-bold">Menu</span>
+            <span className="font-bold">Menu Principal</span>
             <button onClick={() => setIsMenuOpen(false)}><X size={24} /></button>
           </div>
           
@@ -76,9 +109,29 @@ export default function Dashboard() {
                 {item.icon} {item.title}
               </button>
             ))}
+            
+            <div className="pt-10 space-y-2">
+              <p className="px-4 text-[10px] font-bold text-gray-500 uppercase">Gestão de Caixa</p>
+              {caixaAtivo ? (
+                <button 
+                  onClick={() => { setIsModalFecharOpen(true); setIsMenuOpen(false); }}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-orange-400 hover:bg-orange-500/10"
+                >
+                  <Lock size={20} /> Fechar Expediente
+                </button>
+              ) : (
+                <button 
+                  onClick={() => navigate('/caixa')}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-green-400 hover:bg-green-500/10"
+                >
+                  <Unlock size={20} /> Abrir Novo Caixa
+                </button>
+              )}
+            </div>
+
             <button 
               onClick={handleLogout}
-              className="w-full lg:hidden flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 mt-10"
+              className="w-full lg:hidden flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 mt-6"
             >
               <LogOut size={24} /> Sair do Sistema
             </button>
@@ -93,31 +146,56 @@ export default function Dashboard() {
           />
         )}
 
-        {/* CONTEÚDO PRINCIPAL */}
+        {/* MAIN CONTENT */}
         <main className="flex-1 p-4 lg:p-8">
-          <div className="mb-6">
-            <h1 className="text-xl lg:text-2xl font-bold text-[#1A2B3C]">Olá, {userName}!</h1>
-            <p className="text-sm text-gray-500">O que deseja fazer hoje?</p>
+          <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div>
+              <h1 className="text-2xl lg:text-3xl font-black text-[#1A2B3C]">Painel Principal</h1>
+              <p className="text-sm text-gray-500">Olá, <span className="font-semibold text-gray-700">{userName}</span>. O que deseja fazer hoje?</p>
+            </div>
+
+            {/* Alerta de Caixa Fechado (Geral) */}
+            {!caixaAtivo && !loadingCaixa && (
+              <div className="flex items-center gap-3 bg-red-50 border border-red-100 p-3 rounded-2xl animate-bounce">
+                <AlertCircle className="text-red-500" size={20} />
+                <p className="text-xs text-red-700 font-bold">O PDV está bloqueado até que um caixa seja aberto.</p>
+              </div>
+            )}
           </div>
 
-          {/* GRID RESPONSIVO: 2 colunas no mobile, 3+ no desktop */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 lg:gap-6">
+          {/* GRID MENU CARDS */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
             {menuItems.map((item) => (
               <div 
                 key={item.title}
                 onClick={() => navigate(item.path)}
-                className="bg-white p-4 lg:p-6 rounded-2xl border border-gray-100 shadow-sm active:scale-95 transition-all cursor-pointer flex flex-col items-center text-center lg:items-start lg:text-left"
+                className={`
+                  bg-white p-5 lg:p-7 rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 active:scale-95 transition-all cursor-pointer flex flex-col items-center text-center lg:items-start lg:text-left
+                  ${(item.path === '/pdv' && !caixaAtivo) ? 'opacity-50 grayscale cursor-not-allowed' : ''}
+                `}
               >
-                <div className={`${item.color} w-10 h-10 lg:w-12 lg:h-12 rounded-xl flex items-center justify-center text-white mb-3`}>
+                <div className={`${item.color} w-12 h-12 lg:w-14 lg:h-14 rounded-2xl flex items-center justify-center text-white mb-4 shadow-lg shadow-gray-200`}>
                   {item.icon}
                 </div>
-                <h3 className="font-bold text-sm lg:text-base text-[#1A2B3C] leading-tight">{item.title}</h3>
-                <p className="hidden lg:block text-[10px] text-gray-400 mt-1 uppercase tracking-wider">Acessar</p>
+                <h3 className="font-extrabold text-sm lg:text-lg text-[#1A2B3C] leading-tight">{item.title}</h3>
+                <p className="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-widest">Acessar</p>
               </div>
             ))}
           </div>
         </main>
       </div>
+
+      {/* MODAL DE FECHAMENTO */}
+      {isModalFecharOpen && (
+        <ModalFecharCaixa 
+          caixaId={caixaAtivo?.id} 
+          onClose={() => setIsModalFecharOpen(false)} 
+          onSucesso={() => {
+            setCaixaAtivo(null);
+            verificarStatusCaixa();
+          }} 
+        />
+      )}
     </div>
   );
 }
