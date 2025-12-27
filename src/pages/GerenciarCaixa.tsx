@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calculator, ArrowLeft, Play, StopCircle, History, DollarSign } from 'lucide-react';
+import { Calculator, ArrowLeft, Play, StopCircle, History, DollarSign, Loader2 } from 'lucide-react';
 import { api } from '../services/api';
+import { ModalFecharCaixa } from '../components/ModalFecharCaixa';
 
 interface Caixa {
   id: string;
@@ -15,21 +16,18 @@ export default function GerenciarCaixa() {
   const [caixaAtivo, setCaixaAtivo] = useState<Caixa | null>(null);
   const [loading, setLoading] = useState(true);
   const [valorInicial, setValorInicial] = useState('');
+  const [isModalFecharOpen, setIsModalFecharOpen] = useState(false);
+  const [isFinalizando, setIsFinalizando] = useState(false);
 
-  // 1. Carregar status do caixa
   async function fetchCaixaStatus() {
     try {
+      setLoading(true);
       const response = await api.get('/caixas');
-      // No backend Marco 8, listarHistorico retorna um array. 
-      // Pegamos o primeiro se ele estiver com status 'ABERTO'
-      const ultimoCaixa = response.data.data[0];
-      if (ultimoCaixa?.status === 'ABERTO') {
-        setCaixaAtivo(ultimoCaixa);
-      } else {
-        setCaixaAtivo(null);
-      }
+      const caixas = response.data.data || [];
+      const caixaAberto = caixas.find((c: Caixa) => c.status === 'ABERTO');
+      setCaixaAtivo(caixaAberto || null);
     } catch (error) {
-      console.error("Erro ao buscar status do caixa");
+      console.error("Erro ao buscar status do caixa:", error);
     } finally {
       setLoading(false);
     }
@@ -37,27 +35,36 @@ export default function GerenciarCaixa() {
 
   useEffect(() => { fetchCaixaStatus(); }, []);
 
-  // 2. Abrir Caixa
   async function handleAbrirCaixa(e: React.FormEvent) {
     e.preventDefault();
+    if (isFinalizando || !valorInicial) return;
     try {
+      setIsFinalizando(true);
       const response = await api.post('/caixas/abrir', {
         valorInicial: Number(valorInicial)
       });
       setCaixaAtivo(response.data.data);
-      alert("Caixa aberto com sucesso!");
+      setValorInicial('');
     } catch (error: any) {
       alert(error.response?.data?.message || "Erro ao abrir caixa");
+    } finally {
+      setIsFinalizando(false);
     }
   }
 
-  if (loading) return <div className="p-8 text-center">Carregando...</div>;
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#F8FAFC]">
+        <Loader2 className="animate-spin text-[#1A2B3C] mb-2" size={32} />
+        <p className="text-gray-500 font-medium">Sincronizando caixa...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
-      {/* Header Mobile-Friendly */}
       <header className="bg-white border-b px-4 py-4 flex items-center gap-4 sticky top-0 z-10">
-        <button onClick={() => navigate('/dashboard')} className="p-2 -ml-2">
+        <button onClick={() => navigate('/dashboard')} className="p-2 -ml-2 rounded-full">
           <ArrowLeft size={24} className="text-[#1A2B3C]" />
         </button>
         <h1 className="text-lg font-bold text-[#1A2B3C]">Gerenciar Caixa</h1>
@@ -65,71 +72,68 @@ export default function GerenciarCaixa() {
 
       <main className="p-4 max-w-md mx-auto">
         {!caixaAtivo ? (
-          /* ESTADO: CAIXA FECHADO */
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mt-4 text-center">
-            <div className="w-16 h-16 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Calculator size={32} />
+          <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 mt-4 text-center">
+            <div className="w-20 h-20 bg-orange-50 text-orange-500 rounded-3xl flex items-center justify-center mx-auto mb-6">
+              <Calculator size={40} />
             </div>
-            <h2 className="text-xl font-bold text-[#1A2B3C] mb-2">Caixa Fechado</h2>
-            <p className="text-gray-500 text-sm mb-8">Informe o valor de fundo de caixa (troco) para iniciar as vendas de hoje.</p>
-
-            <form onSubmit={handleAbrirCaixa} className="space-y-4">
-              <div className="text-left">
-                <label className="block text-xs font-semibold text-gray-400 uppercase mb-1 ml-1">Valor Inicial (R$)</label>
-                <input 
-                  type="number"
-                  inputMode="decimal" // Melhora o teclado no mobile
-                  required
-                  placeholder="0,00"
-                  className="w-full text-2xl font-bold p-4 bg-[#F8FAFC] border-2 border-gray-100 rounded-xl focus:border-green-500 outline-none transition-all"
-                  value={valorInicial}
-                  onChange={e => setValorInicial(e.target.value)}
-                />
-              </div>
+            <h2 className="text-2xl font-black text-[#1A2B3C] mb-2">Caixa Fechado</h2>
+            <form onSubmit={handleAbrirCaixa} className="space-y-4 mt-6">
+              <input 
+                type="number"
+                required
+                placeholder="Valor Inicial R$"
+                className="w-full text-2xl font-black p-5 bg-gray-50 border-2 border-transparent focus:border-green-500 rounded-2xl outline-none"
+                value={valorInicial}
+                onChange={e => setValorInicial(e.target.value)}
+              />
               <button 
                 type="submit"
-                className="w-full bg-[#2D6A4F] text-white py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 shadow-lg shadow-green-100 active:scale-95 transition-all"
+                disabled={isFinalizando || !valorInicial}
+                className="w-full bg-[#2D6A4F] text-white py-5 rounded-2xl font-black flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
               >
-                <Play size={20} /> Abrir Caixa Agora
+                {isFinalizando ? <Loader2 className="animate-spin" /> : <Play size={22} />}
+                Abrir Caixa
               </button>
             </form>
           </div>
         ) : (
-          /* ESTADO: CAIXA ABERTO */
           <div className="space-y-4 mt-4">
-            <div className="bg-green-600 rounded-2xl p-6 text-white shadow-lg shadow-green-100">
-              <div className="flex justify-between items-start mb-4">
-                <span className="bg-green-500 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">Em Operação</span>
-                <span className="text-xs opacity-80">{new Date(caixaAtivo.abertoEm).toLocaleDateString()}</span>
-              </div>
-              <p className="text-sm opacity-90 mb-1">Fundo de Caixa Inicial</p>
-              <h2 className="text-3xl font-black">R$ {Number(caixaAtivo.valorInicial).toFixed(2)}</h2>
+            <div className="bg-[#1A2B3C] rounded-[2rem] p-8 text-white shadow-2xl relative overflow-hidden">
+                <div className="relative z-10">
+                    <span className="bg-green-500/20 text-green-400 border border-green-500/30 px-3 py-1 rounded-full text-[10px] font-black uppercase">Status: Aberto</span>
+                    <p className="text-xs opacity-50 mt-4 mb-1 font-bold uppercase">Saldo Inicial</p>
+                    <h2 className="text-5xl font-black italic">R$ {Number(caixaAtivo.valorInicial).toFixed(2)}</h2>
+                </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <button 
-                onClick={() => navigate('/pdv')}
-                className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col items-center gap-2 active:bg-gray-50"
-              >
-                <DollarSign className="text-green-600" />
-                <span className="font-bold text-[#1A2B3C]">Nova Venda</span>
+              <button onClick={() => navigate('/pdv')} className="bg-white p-6 rounded-3xl border border-gray-100 flex flex-col items-center gap-3">
+                <div className="bg-green-50 p-4 rounded-2xl text-green-600"><DollarSign size={32} /></div>
+                <span className="font-black text-sm uppercase">Vender</span>
               </button>
-              <button 
-                className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col items-center gap-2 opacity-50 cursor-not-allowed"
-              >
-                <History className="text-blue-600" />
-                <span className="font-bold text-[#1A2B3C]">Histórico</span>
+              <button onClick={() => navigate('/historico-vendas')} className="bg-white p-6 rounded-3xl border border-gray-100 flex flex-col items-center gap-3">
+                <div className="bg-blue-50 p-4 rounded-2xl text-blue-600"><History size={32} /></div>
+                <span className="font-black text-sm uppercase">Histórico</span>
               </button>
             </div>
 
             <button 
-              className="w-full mt-8 flex items-center justify-center gap-2 text-red-500 font-bold p-4 rounded-xl border-2 border-red-50 text-sm hover:bg-red-50 transition-colors"
+              onClick={() => setIsModalFecharOpen(true)}
+              className="w-full mt-6 flex items-center justify-center gap-2 text-gray-400 font-bold p-5 rounded-2xl border-2 border-dashed border-gray-200 text-xs hover:text-red-500 transition-all"
             >
-              <StopCircle size={20} /> Encerrar Turno / Fechar Caixa
+              <StopCircle size={18} /> Encerrar Turno e Fechar Caixa
             </button>
           </div>
         )}
       </main>
+
+      {isModalFecharOpen && caixaAtivo && (
+        <ModalFecharCaixa 
+          caixaId={caixaAtivo.id}
+          onSucesso={() => setCaixaAtivo(null)}
+          onClose={() => setIsModalFecharOpen(false)}
+        />
+      )}
     </div>
   );
 }

@@ -14,7 +14,7 @@ interface ModalFinalizarVendaProps {
   onClose: () => void;
   carrinho: ItemCarrinho[];
   totalVenda: number;
-  onConfirm: (metodo: string) => Promise<void>;
+  onConfirm: (metodo: string, valorRecebido?: number, troco?: number) => Promise<void>;
   isFinalizando: boolean;
 }
 
@@ -51,7 +51,7 @@ export function ModalFinalizarVenda({
           </button>
         </div>
 
-        <div className="p-6 overflow-y-auto space-y-6">
+        <div className="p-6 overflow-y-auto space-y-6 no-scrollbar">
           {/* Itens e Total */}
           <div className="space-y-3">
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-1">Resumo dos Itens</p>
@@ -120,7 +120,7 @@ export function ModalFinalizarVenda({
 
           {/* Botão Confirmar */}
           <button 
-            onClick={() => metodoPagamento && onConfirm(metodoPagamento)}
+            onClick={() => metodoPagamento && onConfirm(metodoPagamento, parseFloat(valorRecebido), troco)}
             disabled={!metodoPagamento || isFinalizando || (metodoPagamento === 'DINHEIRO' && (parseFloat(valorRecebido) || 0) < totalVenda)}
             className="w-full bg-[#1A2B3C] text-white py-5 rounded-2xl font-bold text-lg shadow-xl active:scale-[0.98] transition-all disabled:opacity-20 flex items-center justify-center gap-3"
           >

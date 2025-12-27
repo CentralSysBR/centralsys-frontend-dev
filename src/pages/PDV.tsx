@@ -2,10 +2,11 @@ import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, Search, ShoppingCart, X, Loader2, 
-  ChevronRight, CheckCircle2 
+  ChevronRight, AlertCircle 
 } from 'lucide-react';
 import { api } from '../services/api';
 import { ModalFinalizarVenda } from '../components/ModalFinalizarVenda';
+import { ReciboVenda } from '../components/ReciboVenda';
 
 interface Produto {
   id: string;
@@ -30,8 +31,10 @@ export default function PDV() {
   const [isFinalizando, setIsFinalizando] = useState(false);
   const [categoriaAtiva, setCategoriaAtiva] = useState('Todos');
   const [caixaId, setCaixaId] = useState<string | null>(null);
-  const [vendaSucesso, setVendaSucesso] = useState(false);
+  
   const [isModalPagamentoOpen, setIsModalPagamentoOpen] = useState(false);
+  const [showRecibo, setShowRecibo] = useState(false);
+  const [dadosVendaFinalizada, setDadosVendaFinalizada] = useState<any>(null);
 
   const normalizarTexto = (txt: string) => 
     txt.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
@@ -40,12 +43,18 @@ export default function PDV() {
     async function inicializarDados() {
       try {
         setLoading(true);
+        // Busca produtos e status do caixa simultaneamente
         const [resProdutos, resCaixa] = await Promise.all([
           api.get('/produtos'),
-          api.get('/caixas/aberto')
+          api.get('/caixas') // Usando a rota base para filtrar o aberto
         ]);
+        
         setProdutos(resProdutos.data.data.produtos || []);
-        if (resCaixa.data.data) setCaixaId(resCaixa.data.data.id);
+        
+        const caixas = resCaixa.data.data || [];
+        const caixaAberto = caixas.find((c: any) => c.status === 'ABERTO');
+        if (caixaAberto) setCaixaId(caixaAberto.id);
+        
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
       } finally {
@@ -60,12 +69,16 @@ export default function PDV() {
   const totalItens = carrinho.reduce((a, b) => a + b.quantidade, 0);
 
   function adicionarAoCarrinho(produto: Produto) {
+    if (!caixaId) {
+        alert("Atenção: Você precisa abrir o caixa antes de iniciar uma venda.");
+        return;
+    }
     setCarrinho(prev => {
       const existe = prev.find(item => item.id === produto.id);
       if (existe) {
         return prev.map(item => item.id === produto.id ? { ...item, quantidade: item.quantidade + 1 } : item);
       }
-      return [...prev, { ...produto, quantidade: 1 }];
+      return [...prev, { ...produto, quantity: 1, quantidade: 1 }];
     });
     setBusca('');
   }
@@ -80,36 +93,50 @@ export default function PDV() {
     });
   }
 
-  async function handleConfirmarVenda(metodoSelecionado: string) {
-    if (!caixaId) return;
+  async function handleConfirmarVenda(metodo: string, recebido?: number, troco?: number) {
+    if (!caixaId) {
+        alert("Erro: Caixa não identificado.");
+        return;
+    }
 
     try {
       setIsFinalizando(true);
       const payload = {
         caixaId: caixaId,
-        metodoPagamento: metodoSelecionado,
+        metodoPagamento: metodo,
         itens: carrinho.map(item => ({
           produtoId: item.id,
           quantidade: item.quantidade
         }))
       };
 
-      await api.post('/vendas', payload);
+      const response = await api.post('/vendas', payload);
       
-      setVendaSucesso(true);
+      setDadosVendaFinalizada({
+        id: response.data.data.id,
+        itens: [...carrinho],
+        total: totalVenda,
+        metodoPagamento: metodo,
+        valorRecebido: recebido,
+        troco: troco
+      });
+
       setIsModalPagamentoOpen(false);
-      
-      setTimeout(() => {
-        setCarrinho([]);
-        setVendaSucesso(false);
-        navigate('/dashboard');
-      }, 2500);
+      setShowRecibo(true);
 
     } catch (error: any) {
       alert(error.response?.data?.message || "Erro ao processar venda.");
     } finally {
       setIsFinalizando(false);
     }
+  }
+
+  function resetarPDV() {
+    setCarrinho([]);
+    setDadosVendaFinalizada(null);
+    setShowRecibo(false);
+    // Após a venda, voltamos para o dashboard para garantir atualização de estados
+    window.location.replace('/dashboard');
   }
 
   const produtosExibidos = produtos.filter(p => {
@@ -127,10 +154,23 @@ export default function PDV() {
             </button>
             <h1 className="text-xl font-bold text-[#1A2B3C]">Nova Venda</h1>
           </div>
-          <div className={`text-[10px] font-bold px-3 py-1 rounded-full ${caixaId ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-            {caixaId ? 'CAIXA ABERTO' : 'CAIXA FECHADO'}
+          <div className={`text-[10px] font-black px-3 py-1 rounded-full tracking-tighter ${caixaId ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+            {caixaId ? '● CAIXA OPERACIONAL' : '○ CAIXA FECHADO'}
           </div>
         </div>
+
+        {!caixaId && !loading && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-xl flex items-center gap-3 text-red-600 animate-pulse">
+                <AlertCircle size={20} />
+                <p className="text-xs font-bold uppercase">É necessário abrir o caixa para vender.</p>
+                <button 
+                    onClick={() => navigate('/caixa')}
+                    className="ml-auto bg-red-600 text-white text-[10px] px-3 py-1.5 rounded-lg font-black"
+                >
+                    ABRIR AGORA
+                </button>
+            </div>
+        )}
         
         <div className="relative mb-4">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
@@ -169,7 +209,7 @@ export default function PDV() {
               return (
                 <div 
                   key={produto.id} 
-                  className={`flex items-center justify-between p-4 bg-white rounded-2xl border transition-all relative cursor-pointer active:scale-[0.98] ${qtd > 0 ? 'border-[#2D6A4F] ring-1 ring-[#2D6A4F]' : 'border-gray-100 shadow-sm'}`}
+                  className={`flex items-center justify-between p-4 bg-white rounded-2xl border transition-all relative cursor-pointer active:scale-[0.98] ${qtd > 0 ? 'border-[#2D6A4F] ring-1 ring-[#2D6A4F]' : 'border-gray-100 shadow-sm'} ${!caixaId ? 'opacity-60' : ''}`}
                 >
                   {qtd > 0 && (
                     <button 
@@ -197,8 +237,7 @@ export default function PDV() {
         )}
       </main>
 
-      {/* FOOTER - RESUMO FLUTUANTE */}
-      {carrinho.length > 0 && (
+      {carrinho.length > 0 && !showRecibo && (
         <footer className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 shadow-[0_-8px_20px_rgba(0,0,0,0.05)] z-40">
           <div className="max-w-md mx-auto flex items-center justify-between gap-4">
             <div className="flex flex-col">
@@ -207,17 +246,22 @@ export default function PDV() {
             </div>
             <button 
               onClick={() => setIsModalPagamentoOpen(true)}
-              disabled={!caixaId}
-              className="flex-1 bg-[#2D6A4F] text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-3 active:scale-95 transition-all disabled:opacity-50 shadow-lg shadow-green-100"
+              disabled={!caixaId || isFinalizando}
+              className={`flex-1 py-4 rounded-2xl font-bold flex items-center justify-center gap-3 active:scale-95 transition-all shadow-lg ${caixaId ? 'bg-[#2D6A4F] text-white shadow-green-100' : 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-none'}`}
             >
-              <ShoppingCart size={22} />
-              <span>Finalizar ({totalItens})</span>
+              {caixaId ? (
+                  <>
+                    <ShoppingCart size={22} />
+                    <span>Finalizar ({totalItens})</span>
+                  </>
+              ) : (
+                  <span>Abrir Caixa Necessário</span>
+              )}
             </button>
           </div>
         </footer>
       )}
 
-      {/* NOVO COMPONENTE DE MODAL */}
       <ModalFinalizarVenda 
         isOpen={isModalPagamentoOpen}
         onClose={() => setIsModalPagamentoOpen(false)}
@@ -227,15 +271,16 @@ export default function PDV() {
         isFinalizando={isFinalizando}
       />
 
-      {/* OVERLAY DE SUCESSO */}
-      {vendaSucesso && (
-        <div className="fixed inset-0 bg-[#2D6A4F] z-[110] flex flex-col items-center justify-center text-white p-6 text-center animate-in fade-in duration-500">
-          <div className="bg-white/20 p-8 rounded-full mb-6 animate-bounce">
-            <CheckCircle2 size={80} />
-          </div>
-          <h2 className="text-4xl font-black mb-2">Pago com Sucesso!</h2>
-          <p className="opacity-80 text-lg">O estoque foi atualizado automaticamente.</p>
-        </div>
+      {showRecibo && dadosVendaFinalizada && (
+        <ReciboVenda 
+          vendaId={dadosVendaFinalizada.id}
+          itens={dadosVendaFinalizada.itens}
+          total={dadosVendaFinalizada.total}
+          metodoPagamento={dadosVendaFinalizada.metodoPagamento}
+          valorRecebido={dadosVendaFinalizada.valorRecebido}
+          troco={dadosVendaFinalizada.troco}
+          onFinalizar={resetarPDV}
+        />
       )}
     </div>
   );

@@ -50,7 +50,7 @@ export default function Dashboard() {
     { title: 'Histórico', icon: <History size={24} />, color: 'bg-teal-600', path: '/historico-vendas' },
     { title: 'Produtos', icon: <Package size={24} />, color: 'bg-blue-600', path: '/produtos' },
     { title: 'Caixa', icon: <Calculator size={24} />, color: 'bg-orange-600', path: '/caixa' },
-    { title: 'Relatórios', icon: <LayoutDashboard size={24} />, color: 'bg-purple-600', path: '/relatorios' },
+    { title: 'Relatórios', icon: <LayoutDashboard size={24} />, color: 'bg-purple-600', path: '/relatorios', emBreve: true },
   ];
 
   return (
@@ -61,7 +61,6 @@ export default function Dashboard() {
           <img src={logo} alt="Logo" className="h-9 w-auto" />
           
           <div className="flex items-center gap-2 lg:gap-6">
-            {/* Status do Caixa no Header (Desktop) */}
             {!loadingCaixa && (
               <div className="hidden md:flex items-center gap-3 px-4 py-1.5 rounded-full border border-gray-100 bg-gray-50">
                 <div className={`w-2 h-2 rounded-full ${caixaAtivo ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
@@ -103,10 +102,11 @@ export default function Dashboard() {
             {menuItems.map((item) => (
               <button
                 key={item.title}
+                disabled={item.emBreve}
                 onClick={() => { navigate(item.path); setIsMenuOpen(false); }}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 transition-colors text-sm font-medium"
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors text-sm font-medium ${item.emBreve ? 'opacity-40 cursor-not-allowed' : 'hover:bg-white/10'}`}
               >
-                {item.icon} {item.title}
+                {item.icon} {item.title} {item.emBreve && <span className="text-[8px] bg-orange-500 text-white px-1.5 py-0.5 rounded ml-auto">SOON</span>}
               </button>
             ))}
             
@@ -154,7 +154,6 @@ export default function Dashboard() {
               <p className="text-sm text-gray-500">Olá, <span className="font-semibold text-gray-700">{userName}</span>. O que deseja fazer hoje?</p>
             </div>
 
-            {/* Alerta de Caixa Fechado (Geral) */}
             {!caixaAtivo && !loadingCaixa && (
               <div className="flex items-center gap-3 bg-red-50 border border-red-100 p-3 rounded-2xl animate-bounce">
                 <AlertCircle className="text-red-500" size={20} />
@@ -163,24 +162,39 @@ export default function Dashboard() {
             )}
           </div>
 
-          {/* GRID MENU CARDS */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
-            {menuItems.map((item) => (
-              <div 
-                key={item.title}
-                onClick={() => navigate(item.path)}
-                className={`
-                  bg-white p-5 lg:p-7 rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 active:scale-95 transition-all cursor-pointer flex flex-col items-center text-center lg:items-start lg:text-left
-                  ${(item.path === '/pdv' && !caixaAtivo) ? 'opacity-50 grayscale cursor-not-allowed' : ''}
-                `}
-              >
-                <div className={`${item.color} w-12 h-12 lg:w-14 lg:h-14 rounded-2xl flex items-center justify-center text-white mb-4 shadow-lg shadow-gray-200`}>
-                  {item.icon}
+            {menuItems.map((item) => {
+              const isPdvBloqueado = item.path === '/pdv' && !caixaAtivo;
+              const isEmBreve = item.emBreve;
+
+              return (
+                <div 
+                  key={item.title}
+                  onClick={() => !isEmBreve && navigate(item.path)}
+                  className={`
+                    relative overflow-hidden bg-white p-5 lg:p-7 rounded-3xl border border-gray-100 shadow-sm transition-all flex flex-col items-center text-center lg:items-start lg:text-left
+                    ${(isPdvBloqueado || isEmBreve) ? 'opacity-60 cursor-not-allowed' : 'hover:shadow-xl hover:-translate-y-1 active:scale-95 cursor-pointer'}
+                  `}
+                >
+                  {/* Ribbon Em Breve */}
+                  {isEmBreve && (
+                    <div className="absolute top-0 right-0 overflow-hidden w-20 h-20 pointer-events-none">
+                      <div className="absolute top-[12px] right-[-22px] bg-orange-500 text-white text-[8px] font-black uppercase py-1 w-28 text-center rotate-45 shadow-sm">
+                        Em Breve
+                      </div>
+                    </div>
+                  )}
+
+                  <div className={`${item.color} w-12 h-12 lg:w-14 lg:h-14 rounded-2xl flex items-center justify-center text-white mb-4 shadow-lg shadow-gray-100`}>
+                    {item.icon}
+                  </div>
+                  <h3 className="font-extrabold text-sm lg:text-lg text-[#1A2B3C] leading-tight">{item.title}</h3>
+                  <p className="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-widest">
+                    {isEmBreve ? 'Bloqueado' : 'Acessar'}
+                  </p>
                 </div>
-                <h3 className="font-extrabold text-sm lg:text-lg text-[#1A2B3C] leading-tight">{item.title}</h3>
-                <p className="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-widest">Acessar</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </main>
       </div>
