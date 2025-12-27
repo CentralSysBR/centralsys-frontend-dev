@@ -2,6 +2,8 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
+import GerenciarCaixa from './pages/GerenciarCaixa';
+import PDV from './pages/PDV';
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const token = localStorage.getItem('@centralsys:token');
@@ -21,6 +23,15 @@ export function AppRoutes() {
             </PrivateRoute>
           } 
         />
+        <Route 
+          path="/caixa" 
+          element={
+            <PrivateRoute>
+              <GerenciarCaixa />
+            </PrivateRoute>
+          } 
+        />
+        <Route path="/pdv" element={<PrivateRoute><PDV /></PrivateRoute>} />
         {/* Redireciona qualquer rota inválida para o login */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
