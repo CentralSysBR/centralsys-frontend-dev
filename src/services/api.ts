@@ -1,10 +1,13 @@
 import axios from 'axios';
 
+// Prioriza a variável de ambiente do Vite, caso contrário usa o IP local
+const baseURL = import.meta.env.VITE_API_URL || 'http://192.168.0.248:3333';
+
 export const api = axios.create({
-  baseURL: 'http://192.168.0.248:3333',
+  baseURL,
 });
 
-// Interceptor para anexar o Token JWT em todas as chamadas automáticas
+// Interceptor para anexar o Token JWT
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('@centralsys:token');
   if (token) {
@@ -15,13 +18,15 @@ api.interceptors.request.use((config) => {
   return Promise.reject(error);
 });
 
-// Opcional: Interceptor de resposta para debugar erros
+// Interceptor de resposta para tratar expiração de sessão
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
       console.warn("Sessão expirada ou token inválido.");
-      // Opcional: localStorage.clear(); window.location.href = "/";
+      localStorage.removeItem('@centralsys:token');
+      localStorage.removeItem('@centralsys:user');
+      // window.location.href = "/"; // Opcional: Redirecionar para login
     }
     return Promise.reject(error);
   }
