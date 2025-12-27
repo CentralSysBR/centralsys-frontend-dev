@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  ArrowLeft, Search, Plus, Package, AlertTriangle, 
-  Loader2, Barcode, X, Save, TrendingUp, Camera, Calculator
+  ArrowLeft, Search, Plus, Package, 
+  Loader2, Barcode, X, Save, Camera
 } from 'lucide-react';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import { api } from '../services/api';

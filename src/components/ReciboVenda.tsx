@@ -1,4 +1,4 @@
-import { Printer, CheckCircle2, ArrowLeft, ShoppingBag } from 'lucide-react';
+import { Printer, CheckCircle2, ArrowLeft } from 'lucide-react';
 
 interface ItemRecibo {
   id: string;

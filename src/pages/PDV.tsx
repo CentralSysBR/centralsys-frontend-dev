@@ -22,7 +22,7 @@ interface ItemCarrinho extends Produto {
 
 export default function PDV() {
   const navigate = useNavigate();
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  
   
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [carrinho, setCarrinho] = useState<ItemCarrinho[]>([]);
