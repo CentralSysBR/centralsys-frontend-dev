@@ -126,13 +126,17 @@ export default function Produtos() {
       const gtin = response.data.data;
 
       setFormNovo({
-        nome: gtin.nome || '',
-        categoria: gtin.categoria || 'Geral',
-        codigoBarras: gtin.codigoBarras || code,
-        precoVenda: 0,
-        precoCusto: 0,
-        quantidadeEstoque: 0
-      });
+  nome: gtin.nome,
+  categoria: gtin.categoria || 'Geral',
+  codigoBarras: gtin.codigoBarras,
+  precoVenda: 0,
+  precoCusto: 0,
+  quantidadeEstoque: 0
+});
+
+setTimeout(() => {
+  console.log("FORM NOVO APÓS SET:", formNovo);
+}, 0);
 
       setIsModalNovoOpen(true);
     } catch (error) {
