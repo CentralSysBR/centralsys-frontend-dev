@@ -148,7 +148,7 @@ async function handleBarcodeScanned(code: string) {
     let novoForm = {
       nome: '',
       categoria: 'Geral',
-      codigoBarras: codigoLido,
+      codigoBarras: codigoLido!,
       precoVenda: 0,
       precoCusto: 0,
       quantidadeEstoque: 0
