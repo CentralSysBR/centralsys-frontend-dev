@@ -121,6 +121,8 @@ export default function Produtos() {
         `/produtos/gtin/${code}`
       );
 
+      console.log("GTIN RESPONSE RAW:", response.data);
+      console.log("GTIN DATA:", response.data.data);
       const gtin = response.data.data;
 
       setFormNovo({
