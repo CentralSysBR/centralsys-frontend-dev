@@ -107,47 +107,47 @@ export default function Produtos() {
     };
   }, [isScannerOpen]);
 
-  async function handleBarcodeScanned(code: string) {
-    // 1️⃣ Se já existe no estoque
-    const existente = produtos.find(p => p.codigoBarras === code);
-    if (existente) {
-      abrirEntrada(existente);
-      return;
-    }
+async function handleBarcodeScanned(code: string) {
+  // 1️⃣ Se já existe no estoque
+  const existente = produtos.find(p => p.codigoBarras === code);
+  if (existente) {
+    abrirEntrada(existente);
+    return;
+  }
 
-    // 2️⃣ Consultar backend GTIN
-    try {
-      const response = await api.get<{ data: ProdutoGTINResponse }>(
-        `/produtos/gtin/${code}`
-      );
+  // 2️⃣ Consultar backend GTIN
+  try {
+    const response = await api.get(`/produtos/gtin/${code}`);
+    const gtin = response.data?.data;
 
-      console.log("GTIN RESPONSE RAW:", response.data);
-      console.log("GTIN DATA:", response.data.data);
-      const gtin = response.data.data;
-
+    if (gtin) {
       setFormNovo({
-  nome: gtin.nome,
-  categoria: gtin.categoria || 'Geral',
-  codigoBarras: gtin.codigoBarras,
-  precoVenda: 0,
-  precoCusto: 0,
-  quantidadeEstoque: 0
-});
-
-setTimeout(() => {
-  console.log("FORM NOVO APÓS SET:", formNovo);
-}, 0);
-
-      setIsModalNovoOpen(true);
-    } catch (error) {
-      // 3️⃣ Não encontrou GTIN → cadastro manual
+        nome: gtin.nome ?? '',
+        categoria: gtin.categoria ?? 'Geral',
+        codigoBarras: gtin.codigoBarras ?? code,
+        precoVenda: 0,
+        precoCusto: 0,
+        quantidadeEstoque: 0
+      });
+    } else {
+      // fallback extremo (não deveria acontecer)
       setFormNovo(prev => ({
         ...prev,
         codigoBarras: code
       }));
-      setIsModalNovoOpen(true);
     }
+
+    setIsModalNovoOpen(true);
+  } catch (error) {
+    // 3️⃣ Não encontrou GTIN → cadastro manual
+    setFormNovo(prev => ({
+      ...prev,
+      codigoBarras: code
+    }));
+    setIsModalNovoOpen(true);
   }
+}
+
 
   // Calculadora de Custo Unitário
   useEffect(() => {
