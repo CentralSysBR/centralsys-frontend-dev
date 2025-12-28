@@ -26,8 +26,15 @@ api.interceptors.response.use(
       console.warn("Sessão expirada ou token inválido.");
       localStorage.removeItem('@centralsys:token');
       localStorage.removeItem('@centralsys:user');
-      // window.location.href = "/"; // Opcional: Redirecionar para login
     }
     return Promise.reject(error);
   }
 );
+
+/**
+ * 🔍 Busca produto por GTIN (Bluesoft via backend)
+ */
+export async function buscarProdutoPorGTIN(gtin: string) {
+  const response = await api.get(`/produtos/gtin/${gtin}`);
+  return response.data;
+}
