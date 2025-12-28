@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calculator, ArrowLeft, Play, StopCircle, History, DollarSign, Loader2, ArrowUpCircle, ArrowDownCircle, Wallet } from 'lucide-react';
+import { Calculator, ArrowLeft, Play, StopCircle, DollarSign, Loader2, ArrowUpCircle, ArrowDownCircle, Wallet } from 'lucide-react';
 import { api } from '../services/api';
 import { ModalFecharCaixa } from '../components/ModalFecharCaixa';
 import { ModalMovimentacaoCaixa } from '../components/ModalMovimentacaoCaixa';
@@ -9,7 +9,7 @@ interface Caixa {
   id: string;
   status: 'ABERTO' | 'FECHADO';
   valorInicial: number;
-  valorAtual?: number; // Campo que reflete as movimentações + vendas em dinheiro
+  valorAtual?: number; 
   abertoEm: string;
 }
 
@@ -29,7 +29,6 @@ export default function GerenciarCaixa() {
   async function fetchCaixaStatus() {
     try {
       setLoading(true);
-      // Alterado para buscar especificamente o caixa aberto e seus valores atualizados
       const response = await api.get('/caixas/aberto');
       setCaixaAtivo(response.data.data || null);
     } catch (error) {
@@ -75,7 +74,6 @@ export default function GerenciarCaixa() {
             <p className="font-bold">Sincronizando caixa...</p>
           </div>
         ) : !caixaAtivo ? (
-          /* TELA DE ABERTURA */
           <div className="bg-white p-8 rounded-[40px] shadow-sm border border-gray-100 text-center space-y-6">
             <div className="bg-blue-50 w-20 h-20 rounded-3xl flex items-center justify-center text-blue-600 mx-auto">
               <Calculator size={40} />
@@ -105,7 +103,6 @@ export default function GerenciarCaixa() {
             </button>
           </div>
         ) : (
-          /* TELA DE CAIXA ABERTO */
           <div className="space-y-6">
             <div className="bg-[#1A2B3C] p-8 rounded-[40px] text-white shadow-2xl relative overflow-hidden">
               <div className="relative z-10">
@@ -114,13 +111,11 @@ export default function GerenciarCaixa() {
                     <p className="text-blue-300 text-[10px] font-black uppercase tracking-widest">Turno em Andamento</p>
                 </div>
                 
-                {/* VALOR ATUAL (DINHEIRO EM CAIXA) */}
                 <p className="text-white/50 text-[10px] font-black uppercase mb-1">Saldo Atual em Dinheiro</p>
                 <h2 className="text-5xl font-black mb-4 tracking-tighter">
                     R$ {(caixaAtivo.valorAtual ?? caixaAtivo.valorInicial).toFixed(2)}
                 </h2>
 
-                {/* REGISTRO DO VALOR INICIAL (MENOR) */}
                 <div className="flex items-center gap-2 text-white/40">
                     <Wallet size={14} />
                     <p className="text-[11px] font-bold uppercase">
@@ -168,7 +163,7 @@ export default function GerenciarCaixa() {
           isOpen={isModalMovimentarOpen}
           caixaId={caixaAtivo.id}
           onClose={() => setIsModalMovimentarOpen(false)}
-          onSucesso={fetchCaixaStatus} // Importante: recarrega os dados do banco após movimentar
+          onSucesso={fetchCaixaStatus}
         />
       )}
     </div>

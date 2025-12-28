@@ -17,14 +17,11 @@ export default function Dashboard() {
   const [loadingCaixa, setLoadingCaixa] = useState(true);
 
   useEffect(() => {
-    // 1. Carregar dados do usuário
     const userStorage = localStorage.getItem('@centralsys:user');
     if (userStorage) {
       const user = JSON.parse(userStorage);
       setUserName(user.nome);
     }
-    
-    // 2. Verificar status do caixa ao entrar
     verificarStatusCaixa();
   }, []);
 
@@ -50,12 +47,11 @@ export default function Dashboard() {
     { title: 'Histórico', icon: <History size={24} />, color: 'bg-teal-600', path: '/historico-vendas' },
     { title: 'Produtos', icon: <Package size={24} />, color: 'bg-blue-600', path: '/produtos' },
     { title: 'Caixa', icon: <Calculator size={24} />, color: 'bg-orange-600', path: '/caixa' },
-    { title: 'Relatórios', icon: <LayoutDashboard size={24} />, color: 'bg-purple-600', path: '/relatorios', emBreve: true },
+    { title: 'Relatórios', icon: <LayoutDashboard size={24} />, color: 'bg-purple-600', path: '/relatorios' }, // Removido emBreve
   ];
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
-      {/* HEADER */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-30 px-4 py-3">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <img src={logo} alt="Logo" className="h-9 w-auto" />
@@ -88,7 +84,6 @@ export default function Dashboard() {
       </header>
 
       <div className="flex max-w-7xl mx-auto">
-        {/* ASIDE / SIDEBAR */}
         <aside className={`
           fixed inset-y-0 left-0 z-40 w-64 bg-[#1A2B3C] text-white transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0
           ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}
@@ -102,11 +97,10 @@ export default function Dashboard() {
             {menuItems.map((item) => (
               <button
                 key={item.title}
-                disabled={item.emBreve}
                 onClick={() => { navigate(item.path); setIsMenuOpen(false); }}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors text-sm font-medium ${item.emBreve ? 'opacity-40 cursor-not-allowed' : 'hover:bg-white/10'}`}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors text-sm font-medium hover:bg-white/10"
               >
-                {item.icon} {item.title} {item.emBreve && <span className="text-[8px] bg-orange-500 text-white px-1.5 py-0.5 rounded ml-auto">SOON</span>}
+                {item.icon} {item.title}
               </button>
             ))}
             
@@ -128,17 +122,9 @@ export default function Dashboard() {
                 </button>
               )}
             </div>
-
-            <button 
-              onClick={handleLogout}
-              className="w-full lg:hidden flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 mt-6"
-            >
-              <LogOut size={24} /> Sair do Sistema
-            </button>
           </nav>
         </aside>
 
-        {/* OVERLAY MOBILE */}
         {isMenuOpen && (
           <div 
             className="fixed inset-0 bg-black/50 z-30 lg:hidden"
@@ -146,7 +132,6 @@ export default function Dashboard() {
           />
         )}
 
-        {/* MAIN CONTENT */}
         <main className="flex-1 p-4 lg:p-8">
           <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
@@ -165,33 +150,21 @@ export default function Dashboard() {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
             {menuItems.map((item) => {
               const isPdvBloqueado = item.path === '/pdv' && !caixaAtivo;
-              const isEmBreve = item.emBreve;
 
               return (
                 <div 
                   key={item.title}
-                  onClick={() => !isEmBreve && navigate(item.path)}
+                  onClick={() => !isPdvBloqueado && navigate(item.path)}
                   className={`
                     relative overflow-hidden bg-white p-5 lg:p-7 rounded-3xl border border-gray-100 shadow-sm transition-all flex flex-col items-center text-center lg:items-start lg:text-left
-                    ${(isPdvBloqueado || isEmBreve) ? 'opacity-60 cursor-not-allowed' : 'hover:shadow-xl hover:-translate-y-1 active:scale-95 cursor-pointer'}
+                    ${isPdvBloqueado ? 'opacity-60 cursor-not-allowed' : 'hover:shadow-xl hover:-translate-y-1 active:scale-95 cursor-pointer'}
                   `}
                 >
-                  {/* Ribbon Em Breve */}
-                  {isEmBreve && (
-                    <div className="absolute top-0 right-0 overflow-hidden w-20 h-20 pointer-events-none">
-                      <div className="absolute top-[12px] right-[-22px] bg-orange-500 text-white text-[8px] font-black uppercase py-1 w-28 text-center rotate-45 shadow-sm">
-                        Em Breve
-                      </div>
-                    </div>
-                  )}
-
                   <div className={`${item.color} w-12 h-12 lg:w-14 lg:h-14 rounded-2xl flex items-center justify-center text-white mb-4 shadow-lg shadow-gray-100`}>
                     {item.icon}
                   </div>
                   <h3 className="font-extrabold text-sm lg:text-lg text-[#1A2B3C] leading-tight">{item.title}</h3>
-                  <p className="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-widest">
-                    {isEmBreve ? 'Bloqueado' : 'Acessar'}
-                  </p>
+                  <p className="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-widest">Acessar</p>
                 </div>
               );
             })}
@@ -199,7 +172,6 @@ export default function Dashboard() {
         </main>
       </div>
 
-      {/* MODAL DE FECHAMENTO */}
       {isModalFecharOpen && (
         <ModalFecharCaixa 
           caixaId={caixaAtivo?.id} 
