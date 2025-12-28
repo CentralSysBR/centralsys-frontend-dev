@@ -91,37 +91,48 @@ export default function Produtos() {
     };
   }, [isScannerOpen]);
 
-  // 🔴 AQUI ESTÁ A ÚNICA ALTERAÇÃO REAL
-  async function handleBarcodeScanned(code: string) {
-    // 1. Produto já existe no estoque
-    const existente = produtos.find(p => p.codigoBarras === code);
-    if (existente) {
-      abrirEntrada(existente);
-      return;
-    }
-
-    // 2. Busca no backend via GTIN
-    try {
-      const response = await api.get(`/produtos/gtin/${code}`);
-      const data = response.data?.data;
-
-      if (data) {
-        setFormNovo(prev => ({
-          ...prev,
-          nome: data.nome || '',
-          categoria: data.categoria || 'Geral',
-          codigoBarras: data.codigoBarras || code
-        }));
-      } else {
-        setFormNovo(prev => ({ ...prev, codigoBarras: code }));
-      }
-    } catch (error) {
-      // Não encontrado no GTIN → segue manual
-      setFormNovo(prev => ({ ...prev, codigoBarras: code }));
-    }
-
-    setIsModalNovoOpen(true);
+  // Barcode scanner
+async function handleBarcodeScanned(code: string) {
+  // 1. Produto já existe no estoque
+  const existente = produtos.find(p => p.codigoBarras === code);
+  if (existente) {
+    abrirEntrada(existente);
+    return;
   }
+
+  // 2. Reset do formulário antes de preencher
+  let novoForm = {
+    nome: '',
+    categoria: 'Geral',
+    codigoBarras: code,
+    precoVenda: 0,
+    precoCusto: 0,
+    quantidadeEstoque: 0
+  };
+
+  // 3. Busca no backend via GTIN
+  try {
+    const response = await api.get(`/produtos/gtin/${code}`);
+    const data = response.data?.data;
+
+    if (data) {
+      novoForm = {
+        ...novoForm,
+        nome: data.nome || '',
+        categoria: data.categoria || 'Geral'
+      };
+    }
+  } catch (error) {
+    // GTIN não encontrado → segue manual
+  }
+
+  // 4. Atualiza estado UMA ÚNICA VEZ
+  setFormNovo(novoForm);
+
+  // 5. Abre o modal depois do estado pronto
+  setIsModalNovoOpen(true);
+}
+
 
   // Calculadora de Custo Unitário
   useEffect(() => {
