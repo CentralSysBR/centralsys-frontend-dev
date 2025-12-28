@@ -49,6 +49,8 @@ export default function Produtos() {
   const [qtdEntrada, setQtdEntrada] = useState<number>(0);
   const [novoPrecoVenda, setNovoPrecoVenda] = useState<number>(0);
 
+  const [codigoLido, setCodigoLido] = useState<string | null>(null);
+
   useEffect(() => {
     carregarProdutos();
   }, []);
@@ -67,29 +69,27 @@ export default function Produtos() {
 
   // Lógica do Scanner
   useEffect(() => {
-    let scanner: Html5QrcodeScanner | null = null;
+  let scanner: Html5QrcodeScanner | null = null;
 
-    if (isScannerOpen) {
-      scanner = new Html5QrcodeScanner(
-        "reader",
-        { fps: 10, qrbox: 250 },
-        false
-      );
+  if (isScannerOpen) {
+    scanner = new Html5QrcodeScanner(
+      "reader",
+      { fps: 10, qrbox: 250 },
+      false
+    );
 
-      scanner.render(
-        async (decodedText) => {
-          await handleBarcodeScanned(decodedText);
-          await scanner?.clear();
-          setIsScannerOpen(false);
-        },
-        () => {}
-      );
-    }
-
-    return () => {
+    scanner.render((decodedText) => {
+      setCodigoLido(decodedText);
       scanner?.clear();
-    };
-  }, [isScannerOpen]);
+      setIsScannerOpen(false);
+    }, () => {});
+  }
+
+  return () => {
+    scanner?.clear();
+  };
+}, [isScannerOpen]);
+
 
   // Barcode scanner
 async function handleBarcodeScanned(code: string) {
@@ -133,6 +133,49 @@ async function handleBarcodeScanned(code: string) {
   setIsModalNovoOpen(true);
 }
 
+  useEffect(() => {
+  if (!codigoLido) return;
+
+  async function processarCodigo() {
+    // Produto já existente
+    const existente = produtos.find(p => p.codigoBarras === codigoLido);
+    if (existente) {
+      abrirEntrada(existente);
+      setCodigoLido(null);
+      return;
+    }
+
+    let novoForm = {
+      nome: '',
+      categoria: 'Geral',
+      codigoBarras: codigoLido,
+      precoVenda: 0,
+      precoCusto: 0,
+      quantidadeEstoque: 0
+    };
+
+    try {
+      const response = await api.get(`/produtos/gtin/${codigoLido}`);
+      const data = response.data?.data;
+
+      if (data) {
+        novoForm = {
+          ...novoForm,
+          nome: data.nome || '',
+          categoria: data.categoria || 'Geral'
+        };
+      }
+    } catch {
+      // GTIN não encontrado → segue manual
+    }
+
+    setFormNovo(novoForm);
+    setIsModalNovoOpen(true);
+    setCodigoLido(null);
+  }
+
+  processarCodigo();
+}, [codigoLido, produtos]);
 
   // Calculadora de Custo Unitário
   useEffect(() => {
