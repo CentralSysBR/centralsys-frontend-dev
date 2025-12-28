@@ -115,38 +115,42 @@ async function handleBarcodeScanned(code: string) {
     return;
   }
 
-  // 2️⃣ Consultar backend GTIN
   try {
     const response = await api.get(`/produtos/gtin/${code}`);
     const gtin = response.data?.data;
 
-    if (gtin) {
-      setFormNovo({
-        nome: gtin.nome ?? '',
-        categoria: gtin.categoria ?? 'Geral',
-        codigoBarras: gtin.codigoBarras ?? code,
-        precoVenda: 0,
-        precoCusto: 0,
-        quantidadeEstoque: 0
-      });
-    } else {
-      // fallback extremo (não deveria acontecer)
-      setFormNovo(prev => ({
-        ...prev,
-        codigoBarras: code
-      }));
+    if (!gtin) {
+      throw new Error('GTIN vazio');
     }
 
-    setIsModalNovoOpen(true);
-  } catch (error) {
-    // 3️⃣ Não encontrou GTIN → cadastro manual
+    // 🔒 Passo 1: seta o form
+    setFormNovo({
+      nome: gtin.nome,
+      categoria: gtin.categoria ?? 'Geral',
+      codigoBarras: gtin.codigoBarras ?? code,
+      precoVenda: 0,
+      precoCusto: 0,
+      quantidadeEstoque: 0
+    });
+
+    // 🔒 Passo 2: abre o modal NO PRÓXIMO TICK
+    requestAnimationFrame(() => {
+      setIsModalNovoOpen(true);
+    });
+
+  } catch {
+    // fallback manual
     setFormNovo(prev => ({
       ...prev,
       codigoBarras: code
     }));
-    setIsModalNovoOpen(true);
+
+    requestAnimationFrame(() => {
+      setIsModalNovoOpen(true);
+    });
   }
 }
+
 
 
   // Calculadora de Custo Unitário
