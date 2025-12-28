@@ -1,8 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  ArrowLeft, Search, Plus, Package, 
-  Loader2, Barcode, X, Save, Camera
+import {
+  ArrowLeft,
+  Search,
+  Plus,
+  Package,
+  Loader2,
+  Barcode,
+  X,
+  Save,
+  Camera
 } from 'lucide-react';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import { api } from '../services/api';
@@ -15,6 +22,15 @@ interface Produto {
   precoCusto?: number;
   quantidadeEstoque: number;
   codigoBarras?: string;
+}
+
+interface ProdutoGTINResponse {
+  nome: string;
+  marca?: string;
+  categoria?: string;
+  codigoBarras: string;
+  imagemUrl?: string;
+  unidadeVenda?: string;
 }
 
 export default function Produtos() {
@@ -49,8 +65,6 @@ export default function Produtos() {
   const [qtdEntrada, setQtdEntrada] = useState<number>(0);
   const [novoPrecoVenda, setNovoPrecoVenda] = useState<number>(0);
 
-  const [codigoLido, setCodigoLido] = useState<string | null>(null);
-
   useEffect(() => {
     carregarProdutos();
   }, []);
@@ -61,126 +75,81 @@ export default function Produtos() {
       const response = await api.get('/produtos');
       setProdutos(response.data.data.produtos || []);
     } catch (error) {
-      console.error("Erro ao carregar produtos:", error);
+      console.error('Erro ao carregar produtos:', error);
     } finally {
       setLoading(false);
     }
   }
 
-  // Lógica do Scanner
+  // Scanner
   useEffect(() => {
-  let scanner: Html5QrcodeScanner | null = null;
+    let scanner: Html5QrcodeScanner | null = null;
 
-  if (isScannerOpen) {
-    scanner = new Html5QrcodeScanner(
-      "reader",
-      { fps: 10, qrbox: 250 },
-      false
-    );
+    if (isScannerOpen) {
+      scanner = new Html5QrcodeScanner(
+        'reader',
+        { fps: 10, qrbox: 250 },
+        false
+      );
 
-    scanner.render((decodedText) => {
-      setCodigoLido(decodedText);
-      scanner?.clear();
-      setIsScannerOpen(false);
-    }, () => {});
-  }
-
-  return () => {
-    scanner?.clear();
-  };
-}, [isScannerOpen]);
-
-
-  // Barcode scanner
-async function handleBarcodeScanned(code: string) {
-  // 1. Produto já existe no estoque
-  const existente = produtos.find(p => p.codigoBarras === code);
-  if (existente) {
-    abrirEntrada(existente);
-    return;
-  }
-
-  // 2. Reset do formulário antes de preencher
-  let novoForm = {
-    nome: '',
-    categoria: 'Geral',
-    codigoBarras: code,
-    precoVenda: 0,
-    precoCusto: 0,
-    quantidadeEstoque: 0
-  };
-
-  // 3. Busca no backend via GTIN
-  try {
-    const response = await api.get(`/produtos/gtin/${code}`);
-    const data = response.data?.data;
-
-    if (data) {
-      novoForm = {
-        ...novoForm,
-        nome: data.nome || '',
-        categoria: data.categoria || 'Geral'
-      };
+      scanner.render(
+        (decodedText) => {
+          handleBarcodeScanned(decodedText);
+          scanner?.clear();
+          setIsScannerOpen(false);
+        },
+        () => {}
+      );
     }
-  } catch (error) {
-    // GTIN não encontrado → segue manual
-  }
 
-  // 4. Atualiza estado UMA ÚNICA VEZ
-  setFormNovo(novoForm);
+    return () => {
+      scanner?.clear();
+    };
+  }, [isScannerOpen]);
 
-  // 5. Abre o modal depois do estado pronto
-  setIsModalNovoOpen(true);
-}
-
-  useEffect(() => {
-  if (!codigoLido) return;
-
-  async function processarCodigo() {
-    // Produto já existente
-    const existente = produtos.find(p => p.codigoBarras === codigoLido);
+  async function handleBarcodeScanned(code: string) {
+    // 1️⃣ Se já existe no estoque
+    const existente = produtos.find(p => p.codigoBarras === code);
     if (existente) {
       abrirEntrada(existente);
-      setCodigoLido(null);
       return;
     }
 
-    let novoForm = {
-      nome: '',
-      categoria: 'Geral',
-      codigoBarras: codigoLido!,
-      precoVenda: 0,
-      precoCusto: 0,
-      quantidadeEstoque: 0
-    };
-
+    // 2️⃣ Consultar backend GTIN
     try {
-      const response = await api.get(`/produtos/gtin/${codigoLido}`);
-      const data = response.data?.data;
+      const response = await api.get<{ data: ProdutoGTINResponse }>(
+        `/produtos/gtin/${code}`
+      );
 
-      if (data) {
-        novoForm = {
-          ...novoForm,
-          nome: data.nome || '',
-          categoria: data.categoria || 'Geral'
-        };
-      }
-    } catch {
-      // GTIN não encontrado → segue manual
+      const gtin = response.data.data;
+
+      setFormNovo({
+        nome: gtin.nome || '',
+        categoria: gtin.categoria || 'Geral',
+        codigoBarras: gtin.codigoBarras || code,
+        precoVenda: 0,
+        precoCusto: 0,
+        quantidadeEstoque: 0
+      });
+
+      setIsModalNovoOpen(true);
+    } catch (error) {
+      // 3️⃣ Não encontrou GTIN → cadastro manual
+      setFormNovo(prev => ({
+        ...prev,
+        codigoBarras: code
+      }));
+      setIsModalNovoOpen(true);
     }
-
-    setFormNovo(novoForm);
-    setIsModalNovoOpen(true);
-    setCodigoLido(null);
   }
-
-  processarCodigo();
-}, [codigoLido, produtos]);
 
   // Calculadora de Custo Unitário
   useEffect(() => {
     if (modoCusto === 'lote' && qtdLote > 0) {
-      setFormNovo(prev => ({ ...prev, precoCusto: valorLote / qtdLote }));
+      setFormNovo(prev => ({
+        ...prev,
+        precoCusto: valorLote / qtdLote
+      }));
     }
   }, [valorLote, qtdLote, modoCusto]);
 
@@ -197,13 +166,13 @@ async function handleBarcodeScanned(code: string) {
     try {
       setIsSalvando(true);
       await api.patch(`/produtos/${produtoSelecionado.id}/estoque`, {
-        quantidadeAdicionada: Number(qtdEntrada) || 0,
-        novoPrecoVenda: Number(novoPrecoVenda)
+        quantidadeAdicionada: qtdEntrada,
+        novoPrecoVenda
       });
       setIsModalEntradaOpen(false);
       await carregarProdutos();
     } catch {
-      alert("Erro ao atualizar estoque.");
+      alert('Erro ao atualizar estoque.');
     } finally {
       setIsSalvando(false);
     }
@@ -211,7 +180,7 @@ async function handleBarcodeScanned(code: string) {
 
   async function salvarNovoProduto() {
     if (!formNovo.nome || formNovo.precoVenda <= 0) {
-      alert("Nome e Preço de Venda são obrigatórios.");
+      alert('Nome e Preço de Venda são obrigatórios.');
       return;
     }
 
@@ -221,24 +190,27 @@ async function handleBarcodeScanned(code: string) {
       setIsModalNovoOpen(false);
       await carregarProdutos();
     } catch {
-      alert("Erro ao cadastrar produto.");
+      alert('Erro ao cadastrar produto.');
     } finally {
       setIsSalvando(false);
     }
   }
 
   const normalizarTexto = (txt: string) =>
-    txt.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    txt.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 
   const produtosFiltrados = produtos.filter(p => {
     const termo = normalizarTexto(busca);
-    return normalizarTexto(p.nome).includes(termo) ||
-      (p.codigoBarras && p.codigoBarras.includes(busca));
+    return (
+      normalizarTexto(p.nome).includes(termo) ||
+      (p.codigoBarras && p.codigoBarras.includes(busca))
+    );
   });
 
   const podeSalvarEntrada =
     produtoSelecionado &&
-    (qtdEntrada > 0 || novoPrecoVenda !== Number(produtoSelecionado.precoVenda));
+    (qtdEntrada > 0 ||
+      novoPrecoVenda !== Number(produtoSelecionado.precoVenda));
 
   return (
 <div className="min-h-screen bg-[#F8FAFC] pb-20">
