@@ -65,6 +65,9 @@ export default function Produtos() {
   const [qtdEntrada, setQtdEntrada] = useState<number>(0);
   const [novoPrecoVenda, setNovoPrecoVenda] = useState<number>(0);
 
+  const [gtinProduto, setGtinProduto] = useState<ProdutoGTINResponse | null>(null);
+
+
   useEffect(() => {
     carregarProdutos();
   }, []);
@@ -107,6 +110,24 @@ export default function Produtos() {
     };
   }, [isScannerOpen]);
 
+  useEffect(() => {
+  if (!isModalNovoOpen) return;
+
+  if (gtinProduto) {
+    
+    setFormNovo({
+      nome: gtinProduto.nome,
+      categoria: gtinProduto.categoria ?? 'Geral',
+      codigoBarras: gtinProduto.codigoBarras,
+      precoVenda: 0,
+      precoCusto: 0,
+      quantidadeEstoque: 0
+    });
+    console.log('FORM NOME:', formNovo.nome);
+  }
+}, [isModalNovoOpen, gtinProduto]);
+
+
 async function handleBarcodeScanned(code: string) {
   // 1️⃣ Se já existe no estoque
   const existente = produtos.find(p => p.codigoBarras === code);
@@ -119,37 +140,23 @@ async function handleBarcodeScanned(code: string) {
     const response = await api.get(`/produtos/gtin/${code}`);
     const gtin = response.data?.data;
 
-    if (!gtin) {
-      throw new Error('GTIN vazio');
-    }
+    if (!gtin) throw new Error();
 
-    // 🔒 Passo 1: seta o form
-    setFormNovo({
-      nome: gtin.nome,
-      categoria: gtin.categoria ?? 'Geral',
-      codigoBarras: gtin.codigoBarras ?? code,
-      precoVenda: 0,
-      precoCusto: 0,
-      quantidadeEstoque: 0
-    });
-
-    // 🔒 Passo 2: abre o modal NO PRÓXIMO TICK
-    requestAnimationFrame(() => {
-      setIsModalNovoOpen(true);
-    });
+    // ✅ NÃO escreve direto no formulário
+    setGtinProduto(gtin);
+    setIsModalNovoOpen(true);
 
   } catch {
     // fallback manual
+    setGtinProduto(null);
     setFormNovo(prev => ({
       ...prev,
       codigoBarras: code
     }));
-
-    requestAnimationFrame(() => {
-      setIsModalNovoOpen(true);
-    });
+    setIsModalNovoOpen(true);
   }
 }
+
 
 
 
