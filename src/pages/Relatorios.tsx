@@ -31,8 +31,16 @@ export default function Relatorios() {
       {/* Financeiro */}
       <section className="bg-white p-4 rounded shadow">
         <h2 className="font-semibold mb-2">Resumo Financeiro</h2>
-        <p>Total: R$ {dados.financeiro.total}</p>
-        <p>Vendas: {dados.financeiro.quantidade}</p>
+        <p>
+  Total: R$ {dados.financeiro.faturamentoTotal.toFixed(2)}
+</p>
+<p>
+  Vendas: {dados.financeiro.totalVendas}
+</p>
+<p>
+  Ticket Médio: R$ {dados.financeiro.ticketMedio.toFixed(2)}
+</p>
+
       </section>
 
       {/* Top Produtos */}
