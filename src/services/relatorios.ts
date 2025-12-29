@@ -1,14 +1,26 @@
 import { api } from "./api";
 
-import type { RelatoriosDashboardResponse } from "../types/relatorios";
+export interface LucroFinanceiro {
+  faturamento: number;
+  custoTotal: number;
+  lucro: number;
+  margemPercentual: number;
+}
 
-export async function getRelatoriosDashboard(params?: {
-  inicio?: string;
-  fim?: string;
-}): Promise<{ status: string; data: RelatoriosDashboardResponse }> {
-  const response = await api.get("/relatorios/dashboard", {
-    params,
-  });
+export interface RelatorioLucroResponse {
+  lucro: LucroFinanceiro;
+  periodo: {
+    inicio: string;
+    fim: string;
+  };
+}
 
+export async function getRelatoriosDashboard() {
+  const response = await api.get("/relatorios/dashboard");
   return response.data;
+}
+
+export async function getRelatorioLucro(): Promise<RelatorioLucroResponse> {
+  const response = await api.get("/relatorios/financeiro/lucro");
+  return response.data.data;
 }
