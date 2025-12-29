@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { getRelatoriosDashboard } from "../services/relatorios";
+import type { RelatoriosDashboardResponse } from "../types/relatorios";
 
 export default function Relatorios() {
   const [loading, setLoading] = useState(true);
-  const [dados, setDados] = useState<any>(null);
+  const [dados, setDados] = useState<RelatoriosDashboardResponse | null>(null);
   const [erro, setErro] = useState<string | null>(null);
 
   useEffect(() => {
@@ -23,6 +24,11 @@ export default function Relatorios() {
 
   if (loading) return <p>Carregando relatórios...</p>;
   if (erro) return <p>{erro}</p>;
+
+  if (!dados) {
+  return <p>Nenhum dado de relatório disponível.</p>;
+}
+
 
   return (
     <div className="p-6 space-y-6">
