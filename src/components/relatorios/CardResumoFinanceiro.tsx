@@ -4,7 +4,7 @@ interface Props {
   financeiro: ResumoFinanceiro;
 }
 
-export function ResumoFinanceiroCard({ financeiro }: Props) {
+export function CardResumoFinanceiro({ financeiro }: Props) {
   return (
     <section className="bg-white p-4 rounded shadow">
       <h2 className="font-semibold mb-2">Resumo Financeiro</h2>
