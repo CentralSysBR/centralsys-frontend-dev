@@ -3,14 +3,13 @@ import {
   Line,
   XAxis,
   YAxis,
-  CartesianGrid,
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
 
 interface FluxoDia {
   data: string;
-  faturamento: number;
+  total: number;
 }
 
 interface Props {
@@ -18,29 +17,34 @@ interface Props {
 }
 
 export function GraficoFluxo({ dados }: Props) {
-  return (
-    <section className="bg-white p-4 rounded-xl shadow">
-      <h2 className="font-semibold mb-3">Fluxo de Faturamento</h2>
+  if (!dados || dados.length === 0) {
+    return (
+      <p className="text-sm text-gray-500">
+        Sem dados de fluxo no período selecionado.
+      </p>
+    );
+  }
 
-      <ResponsiveContainer width="100%" height={260}>
+  return (
+    <section className="bg-white p-4 rounded shadow">
+      <h2 className="font-semibold mb-2">Evolução do Faturamento</h2>
+
+      <ResponsiveContainer width="100%" height={250}>
         <LineChart data={dados}>
-          <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="data" />
           <YAxis />
-
           <Tooltip
-            formatter={(value) => {
-              if (typeof value !== "number") return "R$ 0,00";
-              return `R$ ${value.toFixed(2)}`;
-            }}
+            formatter={(value?: number) =>
+              value !== undefined
+                ? `R$ ${value.toFixed(2)}`
+                : "R$ 0,00"
+            }
           />
-
           <Line
             type="monotone"
-            dataKey="faturamento"
-            stroke="#16a34a"
-            strokeWidth={3}
-            dot={{ r: 3 }}
+            dataKey="total"
+            strokeWidth={2}
+            dot={false}
           />
         </LineChart>
       </ResponsiveContainer>

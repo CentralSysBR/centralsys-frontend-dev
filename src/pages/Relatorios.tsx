@@ -4,8 +4,10 @@ import {
   getRelatoriosDashboard,
   getRelatorioLucro,
   getRelatorioFluxo,
-  type RelatorioLucroResponse,
-  type RelatorioFluxoResponse,
+  type ApiResponse,
+  type DashboardRelatorios,
+  type LucroFinanceiro,
+  type FluxoFinanceiro,
 } from "../services/relatorios";
 
 import { CardLucro } from "../components/relatorios";
@@ -13,26 +15,38 @@ import { CardFluxo } from "../components/relatorios/CardFluxo";
 import { GraficoFluxo } from "../components/relatorios/GraficoFluxo";
 
 export default function Relatorios() {
+  /* ======================
+     ESTADOS
+  ====================== */
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
 
-  const [dados, setDados] = useState<any>(null);
-  const [lucro, setLucro] = useState<RelatorioLucroResponse | null>(null);
-  const [fluxo, setFluxo] = useState<RelatorioFluxoResponse | null>(null);
+  const [dashboard, setDashboard] =
+    useState<ApiResponse<DashboardRelatorios> | null>(null);
 
+  const [lucroResp, setLucroResp] =
+    useState<ApiResponse<LucroFinanceiro> | null>(null);
+
+  const [fluxoResp, setFluxoResp] =
+    useState<ApiResponse<FluxoFinanceiro> | null>(null);
+
+  /* ======================
+     EFFECT
+  ====================== */
   useEffect(() => {
     async function carregar() {
       try {
-        const [dashboardResp, lucroResp, fluxoResp] = await Promise.all([
+        const [dashboardData, lucroData, fluxoData] = await Promise.all([
           getRelatoriosDashboard(),
           getRelatorioLucro(),
           getRelatorioFluxo(),
         ]);
 
-        setDados(dashboardResp.data);
-        setLucro(lucroResp);
-        setFluxo(fluxoResp);
+        setDashboard(dashboardData);
+        setLucroResp(lucroData);
+        setFluxoResp(fluxoData);
       } catch (e) {
+        console.error("[Relatorios] erro ao carregar", e);
         setErro("Erro ao carregar relatórios.");
       } finally {
         setLoading(false);
@@ -42,10 +56,20 @@ export default function Relatorios() {
     carregar();
   }, []);
 
+  /* ======================
+     GUARDS
+  ====================== */
   if (loading) return <p>Carregando relatórios...</p>;
-  if (erro || !dados || !lucro) return <p>{erro}</p>;
+  if (erro) return <p>{erro}</p>;
+  if (!dashboard || !lucroResp) return <p>Dados incompletos.</p>;
 
-  const margemPercentual = lucro.lucro.margemPercentual;
+  /* ======================
+     NORMALIZAÇÃO
+  ====================== */
+  const { financeiro, topProdutos, estoque } = dashboard.data;
+
+  const lucro = lucroResp.data;
+  const margemPercentual = lucro.margemPercentual;
 
   const insightLucro =
     margemPercentual > 0 && margemPercentual < 20
@@ -54,44 +78,45 @@ export default function Relatorios() {
       ? "Você está vendendo com prejuízo"
       : null;
 
+  /* ======================
+     RENDER
+  ====================== */
   return (
     <div className="p-6 space-y-6">
       <h1 className="text-2xl font-bold">Relatórios</h1>
 
       {/* 💰 LUCRO */}
       <CardLucro
-        lucro={lucro.lucro.lucro}
+        lucro={lucro.lucro}
         margem={margemPercentual}
         insight={insightLucro}
       />
 
-      {/* 📈 FLUXO 
-      {fluxo && (
+      {/* 📈 FLUXO FINANCEIRO */}
+      {fluxoResp && (
         <>
           <CardFluxo
-            total={fluxo.totalPeriodo}
-            media={fluxo.mediaDiaria}
-            diasComVenda={fluxo.diasComVenda}
-            diasSemVenda={fluxo.diasSemVenda}
-            insights={fluxo.insights}
+            total={fluxoResp.data.totalPeriodo}
+            media={fluxoResp.data.mediaDiaria}
+            insights={fluxoResp.insights ?? []}
           />
 
-          <GraficoFluxo dados={fluxo.serie} />
+          <GraficoFluxo dados={fluxoResp.data.dias} />
         </>
-      )}  */}
+      )}
 
-      {/* 📊 FINANCEIRO */}
+      {/* 📊 RESUMO FINANCEIRO */}
       <section className="bg-white p-4 rounded shadow">
         <h2 className="font-semibold mb-2">Resumo Financeiro</h2>
-        <p>Total faturado: R$ {dados.financeiro.faturamentoTotal}</p>
-        <p>Vendas realizadas: {dados.financeiro.totalVendas}</p>
+        <p>Total faturado: R$ {financeiro.faturamentoTotal}</p>
+        <p>Vendas realizadas: {financeiro.totalVendas}</p>
       </section>
 
       {/* 🏆 TOP PRODUTOS */}
       <section className="bg-white p-4 rounded shadow">
         <h2 className="font-semibold mb-2">Top Produtos</h2>
         <ul>
-          {dados.topProdutos.map((p: any, i: number) => (
+          {topProdutos.map((p, i) => (
             <li key={i}>
               {p.nome} — R$ {p.totalFaturado}
             </li>
@@ -103,7 +128,7 @@ export default function Relatorios() {
       <section className="bg-white p-4 rounded shadow">
         <h2 className="font-semibold mb-2">Estoque Crítico</h2>
         <ul>
-          {dados.estoque.itensCriticos.map((p: any, i: number) => (
+          {estoque.itensCriticos.map((p, i) => (
             <li key={i}>
               {p.nome} — {p.qtd}
             </li>

@@ -1,18 +1,34 @@
 import { api } from "./api";
 
+/* ======================
+   BASE API
+====================== */
+
+export interface ApiPeriodo {
+  inicio: string;
+  fim: string;
+}
+
+export interface ApiMeta {
+  periodo?: ApiPeriodo;
+}
+
+export interface ApiResponse<T> {
+  status: "success";
+  data: T;
+  meta?: ApiMeta;
+  insights?: string[];
+}
+
+/* ======================
+   LUCRO
+====================== */
+
 export interface LucroFinanceiro {
   faturamento: number;
   custoTotal: number;
   lucro: number;
   margemPercentual: number;
-}
-
-export interface RelatorioLucroResponse {
-  lucro: LucroFinanceiro;
-  periodo: {
-    inicio: string;
-    fim: string;
-  };
 }
 
 /* ======================
@@ -21,19 +37,42 @@ export interface RelatorioLucroResponse {
 
 export interface FluxoDia {
   data: string;
-  faturamento: number;
+  total: number;
 }
 
-export interface RelatorioFluxoResponse {
+export interface FluxoFinanceiro {
   totalPeriodo: number;
   mediaDiaria: number;
-  diasComVenda: number;
-  diasSemVenda: number;
-  serie: FluxoDia[];
-  insights: string[];
-  periodo: {
-    inicio: string;
-    fim: string;
+  dias: FluxoDia[];
+}
+
+/* ======================
+   DASHBOARD
+====================== */
+
+export interface DashboardRelatorios {
+  financeiro: {
+    faturamentoTotal: number;
+    totalVendas: number;
+    ticketMedio: number;
+    porMetodo: {
+      metodo: string;
+      valor: number;
+    }[];
+  };
+  topProdutos: {
+    nome: string;
+    quantidade: number;
+    totalFaturado: number;
+  }[];
+  estoque: {
+    totalItens: number;
+    alertaEstoqueBaixo: number;
+    valorTotalEstoque: number;
+    itensCriticos: {
+      nome: string;
+      qtd: number;
+    }[];
   };
 }
 
@@ -41,17 +80,23 @@ export interface RelatorioFluxoResponse {
    REQUESTS
 ====================== */
 
-export async function getRelatoriosDashboard() {
+export async function getRelatoriosDashboard(): Promise<
+  ApiResponse<DashboardRelatorios>
+> {
   const response = await api.get("/relatorios/dashboard");
   return response.data;
 }
 
-export async function getRelatorioLucro(): Promise<RelatorioLucroResponse> {
+export async function getRelatorioLucro(): Promise<
+  ApiResponse<LucroFinanceiro>
+> {
   const response = await api.get("/relatorios/financeiro/lucro");
-  return response.data.data;
+  return response.data;
 }
 
-export async function getRelatorioFluxo(): Promise<RelatorioFluxoResponse> {
+export async function getRelatorioFluxo(): Promise<
+  ApiResponse<FluxoFinanceiro>
+> {
   const response = await api.get("/relatorios/financeiro/fluxo");
-  return response.data.data;
+  return response.data;
 }
