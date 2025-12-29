@@ -65,7 +65,7 @@ export default function Relatorios() {
         insight={insightLucro}
       />
 
-      {/* 📈 FLUXO */}
+      {/* 📈 FLUXO 
       {fluxo && (
         <>
           <CardFluxo
@@ -78,7 +78,7 @@ export default function Relatorios() {
 
           <GraficoFluxo dados={fluxo.serie} />
         </>
-      )}
+      )}  */}
 
       {/* 📊 FINANCEIRO */}
       <section className="bg-white p-4 rounded shadow">
