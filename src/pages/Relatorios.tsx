@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { getRelatoriosDashboard } from "../services/relatorios";
 import type { RelatoriosDashboardResponse } from "../types/relatorios";
+import { ResumoFinanceiroCard } from "../components/relatorios/ResumoFinanceiroCard";
+import { TopProdutosCard } from "../components/relatorios/TopProdutosCard";
+import { EstoqueCriticoCard } from "../components/relatorios/EstoqueCriticoCard";
+
 
 export default function Relatorios() {
   const [loading, setLoading] = useState(true);
@@ -34,44 +38,17 @@ export default function Relatorios() {
     <div className="p-6 space-y-6">
       <h1 className="text-2xl font-bold">Relatórios</h1>
 
-      {/* Financeiro */}
-      <section className="bg-white p-4 rounded shadow">
-        <h2 className="font-semibold mb-2">Resumo Financeiro</h2>
-        <p>
-  Total: R$ {dados.financeiro.faturamentoTotal.toFixed(2)}
-</p>
-<p>
-  Vendas: {dados.financeiro.totalVendas}
-</p>
-<p>
-  Ticket Médio: R$ {dados.financeiro.ticketMedio.toFixed(2)}
-</p>
+     return (
+  <div className="p-6 space-y-6">
+    <h1 className="text-2xl font-bold">Relatórios</h1>
 
-      </section>
+    <ResumoFinanceiroCard financeiro={dados.financeiro} />
 
-      {/* Top Produtos */}
-      <section className="bg-white p-4 rounded shadow">
-        <h2 className="font-semibold mb-2">Top Produtos</h2>
-        <ul>
-          {dados.topProdutos.map((p: any) => (
-            <li key={p.id}>
-              {p.nome} — {p.totalVendido}
-            </li>
-          ))}
-        </ul>
-      </section>
+    <TopProdutosCard produtos={dados.topProdutos} />
 
-      {/* Estoque */}
-      <section className="bg-white p-4 rounded shadow">
-        <h2 className="font-semibold mb-2">Estoque Crítico</h2>
-        <ul>
-          {dados.estoque.itensCriticos.map((p: any) => (
-            <li key={p.id}>
-              {p.nome} — {p.quantidade}
-            </li>
-          ))}
-        </ul>
-      </section>
+    <EstoqueCriticoCard itens={dados.estoque.itensCriticos} />
+  </div>
+);
     </div>
   );
 }
