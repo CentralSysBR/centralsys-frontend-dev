@@ -1,28 +1,40 @@
 import { useEffect, useState } from "react";
+
 import {
   getRelatoriosDashboard,
   getRelatorioLucro,
-  type RelatorioLucroResponse
+  getRelatorioFluxo,
+  type RelatorioLucroResponse,
+  type RelatorioFluxoResponse,
 } from "../services/relatorios";
 
 import { CardLucro } from "../components/relatorios";
+import { CardFluxo } from "../components/relatorios/CardFluxo";
+import { GraficoFluxo } from "../components/relatorios/GraficoFluxo";
 
 export default function Relatorios() {
   const [loading, setLoading] = useState(true);
-  const [dados, setDados] = useState<any>(null);
-  const [lucro, setLucro] = useState<RelatorioLucroResponse | null>(null);
   const [erro, setErro] = useState<string | null>(null);
+
+  const [dados, setDados] = useState<any>(null);
+  const [lucro, setLucro] =
+    useState<RelatorioLucroResponse | null>(null);
+  const [fluxo, setFluxo] =
+    useState<RelatorioFluxoResponse | null>(null);
 
   useEffect(() => {
     async function carregar() {
       try {
-        const [dashboard, lucroResp] = await Promise.all([
-          getRelatoriosDashboard(),
-          getRelatorioLucro()
-        ]);
+        const [dashboardResp, lucroResp, fluxoResp] =
+          await Promise.all([
+            getRelatoriosDashboard(),
+            getRelatorioLucro(),
+            getRelatorioFluxo(),
+          ]);
 
-        setDados(dashboard.data);
+        setDados(dashboardResp.data);
         setLucro(lucroResp);
+        setFluxo(fluxoResp);
       } catch {
         setErro("Erro ao carregar relatórios.");
       } finally {
@@ -51,10 +63,26 @@ export default function Relatorios() {
 
       {/* 💰 LUCRO */}
       <CardLucro
-  lucro={lucro.lucro.lucro}
-  margem={margemPercentual}
-  insight={insightLucro}
-/>
+        lucro={lucro.lucro.lucro}
+        margem={margemPercentual}
+        insight={insightLucro}
+        variacao={null}
+      />
+
+      {/* 🔁 FLUXO FINANCEIRO */}
+      {fluxo && (
+        <>
+          <CardFluxo
+            total={fluxo.totalPeriodo}
+            media={fluxo.mediaDiaria}
+            diasComVenda={fluxo.diasComVenda}
+            diasSemVenda={fluxo.diasSemVenda}
+            insights={fluxo.insights}
+          />
+
+          <GraficoFluxo dados={fluxo.serie} />
+        </>
+      )}
 
       {/* 📊 FINANCEIRO */}
       <section className="bg-white p-4 rounded shadow">
