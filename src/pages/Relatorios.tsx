@@ -17,25 +17,22 @@ export default function Relatorios() {
   const [erro, setErro] = useState<string | null>(null);
 
   const [dados, setDados] = useState<any>(null);
-  const [lucro, setLucro] =
-    useState<RelatorioLucroResponse | null>(null);
-  const [fluxo, setFluxo] =
-    useState<RelatorioFluxoResponse | null>(null);
+  const [lucro, setLucro] = useState<RelatorioLucroResponse | null>(null);
+  const [fluxo, setFluxo] = useState<RelatorioFluxoResponse | null>(null);
 
   useEffect(() => {
     async function carregar() {
       try {
-        const [dashboardResp, lucroResp, fluxoResp] =
-          await Promise.all([
-            getRelatoriosDashboard(),
-            getRelatorioLucro(),
-            getRelatorioFluxo(),
-          ]);
+        const [dashboardResp, lucroResp, fluxoResp] = await Promise.all([
+          getRelatoriosDashboard(),
+          getRelatorioLucro(),
+          getRelatorioFluxo(),
+        ]);
 
         setDados(dashboardResp.data);
         setLucro(lucroResp);
         setFluxo(fluxoResp);
-      } catch {
+      } catch (e) {
         setErro("Erro ao carregar relatórios.");
       } finally {
         setLoading(false);
@@ -66,10 +63,9 @@ export default function Relatorios() {
         lucro={lucro.lucro.lucro}
         margem={margemPercentual}
         insight={insightLucro}
-        variacao={null}
       />
 
-      {/* 🔁 FLUXO FINANCEIRO */}
+      {/* 📈 FLUXO */}
       {fluxo && (
         <>
           <CardFluxo
