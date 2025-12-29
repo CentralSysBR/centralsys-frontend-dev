@@ -38,7 +38,7 @@ export default function Relatorios() {
     <div className="p-6 space-y-6">
       <h1 className="text-2xl font-bold">Relatórios</h1>
 
-     return (
+     
   <div className="p-6 space-y-6">
     <h1 className="text-2xl font-bold">Relatórios</h1>
 
@@ -48,7 +48,7 @@ export default function Relatorios() {
 
     <EstoqueCriticoCard itens={dados.estoque.itensCriticos} />
   </div>
-);
+
     </div>
   );
 }
