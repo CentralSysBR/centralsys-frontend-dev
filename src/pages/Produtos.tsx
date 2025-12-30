@@ -75,7 +75,7 @@ export default function Produtos() {
     try {
       setLoading(true);
       const response = await api.get('/produtos');
-      setProdutos(response.data.data.produtos || []);
+      setProdutos(response.data.data || []);
     } catch (error) {
       console.error('Erro ao carregar produtos:', error);
     } finally {
@@ -100,7 +100,7 @@ export default function Produtos() {
           scanner?.clear();
           setIsScannerOpen(false);
         },
-        () => {}
+        () => { }
       );
     }
 
@@ -218,7 +218,7 @@ export default function Produtos() {
       novoPrecoVenda !== Number(produtoSelecionado.precoVenda));
 
   return (
-<div className="min-h-screen bg-[#F8FAFC] pb-20">
+    <div className="min-h-screen bg-[#F8FAFC] pb-20">
 
       <header className="bg-white border-b sticky top-0 z-30 px-4 py-4 shadow-sm">
 
@@ -256,7 +256,7 @@ export default function Produtos() {
 
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
 
-          <input 
+          <input
 
             type="text"
 
@@ -288,9 +288,9 @@ export default function Produtos() {
 
             {produtosFiltrados.map(produto => (
 
-              <div 
+              <div
 
-                key={produto.id} 
+                key={produto.id}
 
                 onClick={() => abrirEntrada(produto)}
 
@@ -301,28 +301,27 @@ export default function Produtos() {
                 <div className="flex items-center gap-4">
 
                   <div className="w-14 h-14 rounded-xl overflow-hidden flex items-center justify-center bg-gray-100">
-  {produto.imagemUrl ? (
-    <img
-      src={produto.imagemUrl}
-      alt={produto.nome}
-      className="w-full h-full object-cover"
-      loading="lazy"
-      onError={(e) => {
-        (e.currentTarget as HTMLImageElement).style.display = 'none';
-      }}
-    />
-  ) : (
-    <div
-      className={`w-full h-full flex items-center justify-center ${
-        produto.quantidadeEstoque <= 5
-          ? 'bg-red-50 text-red-500'
-          : 'bg-blue-50 text-blue-500'
-      }`}
-    >
-      <Package size={24} />
-    </div>
-  )}
-</div>
+                    {produto.imagemUrl ? (
+                      <img
+                        src={produto.imagemUrl}
+                        alt={produto.nome}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      <div
+                        className={`w-full h-full flex items-center justify-center ${produto.quantidadeEstoque <= 5
+                            ? 'bg-red-50 text-red-500'
+                            : 'bg-blue-50 text-blue-500'
+                          }`}
+                      >
+                        <Package size={24} />
+                      </div>
+                    )}
+                  </div>
 
 
                   <div>
@@ -369,7 +368,7 @@ export default function Produtos() {
 
             <h2 className="font-bold text-lg">Escanear Código</h2>
 
-            <button onClick={() => setIsScannerOpen(false)} className="p-2 bg-white/10 rounded-full"><X size={28}/></button>
+            <button onClick={() => setIsScannerOpen(false)} className="p-2 bg-white/10 rounded-full"><X size={28} /></button>
 
           </div>
 
@@ -397,7 +396,7 @@ export default function Produtos() {
 
               <h2 className="text-xl font-bold text-[#1A2B3C]">Cadastrar Produto</h2>
 
-              <button onClick={() => setIsModalNovoOpen(false)} className="p-2 bg-gray-100 rounded-full"><X size={20}/></button>
+              <button onClick={() => setIsModalNovoOpen(false)} className="p-2 bg-gray-100 rounded-full"><X size={20} /></button>
 
             </div>
 
@@ -408,52 +407,52 @@ export default function Produtos() {
               <div className="space-y-1">
 
                 {formNovo.imagemUrl && (
-  <div className="flex justify-center">
-    <div className="w-32 h-32 rounded-2xl overflow-hidden bg-gray-100 shadow-sm">
-      <img
-        src={formNovo.imagemUrl}
-        alt={formNovo.nome}
-        className="w-full h-full object-cover animate-fade-in"
-        loading="lazy"
-      />
-    </div>
-  </div>
-)}
+                  <div className="flex justify-center">
+                    <div className="w-32 h-32 rounded-2xl overflow-hidden bg-gray-100 shadow-sm">
+                      <img
+                        src={formNovo.imagemUrl}
+                        alt={formNovo.nome}
+                        className="w-full h-full object-cover animate-fade-in"
+                        loading="lazy"
+                      />
+                    </div>
+                  </div>
+                )}
 
-{formNovo.imagemUrl && (
-  <div className="text-center">
-    <span className="inline-block text-[10px] font-bold px-3 py-1 rounded-full bg-blue-50 text-blue-600">
-      Dados preenchidos automaticamente via GTIN
-    </span>
-  </div>
-)}
+                {formNovo.imagemUrl && (
+                  <div className="text-center">
+                    <span className="inline-block text-[10px] font-bold px-3 py-1 rounded-full bg-blue-50 text-blue-600">
+                      Dados preenchidos automaticamente via GTIN
+                    </span>
+                  </div>
+                )}
                 <label className="text-[10px] font-bold text-gray-400 uppercase ml-2">Identificação</label>
 
-                <input 
+                <input
 
-                  placeholder="Nome do Produto" 
+                  placeholder="Nome do Produto"
 
                   className="w-full p-4 bg-gray-50 rounded-2xl outline-none border border-transparent focus:border-[#1A2B3C] transition-all"
 
                   value={formNovo.nome}
 
-                  onChange={e => setFormNovo({...formNovo, nome: e.target.value})}
+                  onChange={e => setFormNovo({ ...formNovo, nome: e.target.value })}
 
                 />
 
                 <div className="flex items-center gap-2 p-4 bg-gray-50 rounded-2xl border border-dashed border-gray-300">
 
-                  <Barcode size={20} className="text-gray-400"/>
+                  <Barcode size={20} className="text-gray-400" />
 
-                  <input 
+                  <input
 
-                    placeholder="Código de Barras" 
+                    placeholder="Código de Barras"
 
                     className="bg-transparent outline-none flex-1 text-sm font-mono"
 
                     value={formNovo.codigoBarras}
 
-                    onChange={e => setFormNovo({...formNovo, codigoBarras: e.target.value})}
+                    onChange={e => setFormNovo({ ...formNovo, codigoBarras: e.target.value })}
 
                   />
 
@@ -503,7 +502,7 @@ export default function Produtos() {
 
                   <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
 
-                    <input type="number" placeholder="0,00" className="bg-transparent w-full font-bold outline-none" value={formNovo.precoCusto || ''} onChange={e => setFormNovo({...formNovo, precoCusto: Number(e.target.value)})} />
+                    <input type="number" placeholder="0,00" className="bg-transparent w-full font-bold outline-none" value={formNovo.precoCusto || ''} onChange={e => setFormNovo({ ...formNovo, precoCusto: Number(e.target.value) })} />
 
                   </div>
 
@@ -527,7 +526,7 @@ export default function Produtos() {
 
                   <label className="text-[10px] font-bold text-green-600 uppercase ml-2">Venda (R$)</label>
 
-                  <input type="number" className="w-full p-4 bg-green-50 rounded-2xl outline-none border border-green-100 font-black text-green-700" value={formNovo.precoVenda || ''} onChange={e => setFormNovo({...formNovo, precoVenda: Number(e.target.value)})} />
+                  <input type="number" className="w-full p-4 bg-green-50 rounded-2xl outline-none border border-green-100 font-black text-green-700" value={formNovo.precoVenda || ''} onChange={e => setFormNovo({ ...formNovo, precoVenda: Number(e.target.value) })} />
 
                 </div>
 
@@ -535,7 +534,7 @@ export default function Produtos() {
 
                   <label className="text-[10px] font-bold text-gray-400 uppercase ml-2">Estoque Inicial</label>
 
-                  <input type="number" className="w-full p-4 bg-gray-50 rounded-2xl outline-none border border-gray-100 font-bold" value={formNovo.quantidadeEstoque || ''} onChange={e => setFormNovo({...formNovo, quantidadeEstoque: Number(e.target.value)})} />
+                  <input type="number" className="w-full p-4 bg-gray-50 rounded-2xl outline-none border border-gray-100 font-bold" value={formNovo.quantidadeEstoque || ''} onChange={e => setFormNovo({ ...formNovo, quantidadeEstoque: Number(e.target.value) })} />
 
                 </div>
 
@@ -547,7 +546,7 @@ export default function Produtos() {
 
             <button onClick={salvarNovoProduto} disabled={isSalvando} className="w-full bg-[#1A2B3C] text-white py-5 rounded-3xl font-bold flex items-center justify-center gap-2 active:scale-95 transition-all disabled:opacity-50">
 
-              {isSalvando ? <Loader2 className="animate-spin" /> : <Save size={20}/>}
+              {isSalvando ? <Loader2 className="animate-spin" /> : <Save size={20} />}
 
               Finalizar Cadastro
 
@@ -573,11 +572,11 @@ export default function Produtos() {
 
               <h2 className="font-bold text-lg text-[#1A2B3C]">Ajuste de Produto</h2>
 
-              <button onClick={() => setIsModalEntradaOpen(false)} className="p-2 bg-gray-100 rounded-full text-gray-500"><X size={20}/></button>
+              <button onClick={() => setIsModalEntradaOpen(false)} className="p-2 bg-gray-100 rounded-full text-gray-500"><X size={20} /></button>
 
             </div>
 
-            
+
 
             <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
 

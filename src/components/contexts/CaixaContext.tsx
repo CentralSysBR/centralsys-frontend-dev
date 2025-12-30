@@ -1,18 +1,18 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import getCaixaAtivo from "../../services/caixa";
+import getCaixaAberto from "../../services/caixa";
 
 /* ======================
    TIPOS
 ====================== */
 
-export interface CaixaAtivo {
+export interface CaixaAberto {
   id: string;
   status: "ABERTO" | "FECHADO";
   abertoEm: string;
 }
 
 interface CaixaContextData {
-  caixaAtivo: CaixaAtivo | null;
+  CaixaAberto: CaixaAberto | null;
   carregando: boolean;
   recarregarCaixa: () => Promise<void>;
 }
@@ -26,23 +26,23 @@ const CaixaContext = createContext<CaixaContextData>(
 ====================== */
 
 export function CaixaProvider({ children }: { children: React.ReactNode }) {
-  const [caixaAtivo, setCaixaAtivo] = useState<CaixaAtivo | null>(null);
+  const [CaixaAberto, setCaixaAberto] = useState<CaixaAberto | null>(null);
   const [carregando, setCarregando] = useState(true);
 
   async function carregar() {
     try {
       setCarregando(true);
 
-      const caixa = await getCaixaAtivo();
+      const caixa = await getCaixaAberto();
 
       // 🔒 Garantia explícita de tipo
       if (caixa && caixa.status === "ABERTO") {
-        setCaixaAtivo(caixa);
+        setCaixaAberto(caixa);
       } else {
-        setCaixaAtivo(null);
+        setCaixaAberto(null);
       }
     } catch {
-      setCaixaAtivo(null);
+      setCaixaAberto(null);
     } finally {
       setCarregando(false);
     }
@@ -55,7 +55,7 @@ export function CaixaProvider({ children }: { children: React.ReactNode }) {
   return (
     <CaixaContext.Provider
       value={{
-        caixaAtivo,
+        CaixaAberto,
         carregando,
         recarregarCaixa: carregar,
       }}

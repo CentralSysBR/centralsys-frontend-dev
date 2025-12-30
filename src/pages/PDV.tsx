@@ -49,7 +49,7 @@ export default function PDV() {
           api.get('/caixas') // Usando a rota base para filtrar o aberto
         ]);
         
-        setProdutos(resProdutos.data.data.produtos || []);
+        setProdutos(resProdutos.data.data || []);
         
         const caixas = resCaixa.data.data || [];
         const caixaAberto = caixas.find((c: any) => c.status === 'ABERTO');

@@ -22,7 +22,7 @@ type MetodoPagamento =
 ====================== */
 
 export default function CriarVenda() {
-  const { caixaAtivo, carregando } = useCaixa();
+  const { CaixaAberto, carregando } = useCaixa();
 
   const [itens, setItens] = useState<ItemVenda[]>([]);
   const [metodoPagamento, setMetodoPagamento] =
@@ -39,7 +39,7 @@ export default function CriarVenda() {
     return <p>Verificando caixa...</p>;
   }
 
-  if (!caixaAtivo) {
+  if (!CaixaAberto) {
     return (
       <div className="p-6">
         <p className="text-red-600 font-semibold">
@@ -55,8 +55,8 @@ export default function CriarVenda() {
 
   async function finalizarVenda() {
     // 🔒 Guard explícito (TS + domínio)
-    if (!caixaAtivo) {
-      setErro("Nenhum caixa ativo.");
+    if (!CaixaAberto) {
+      setErro("Nenhum caixa aberto.");
       return;
     }
 
@@ -70,7 +70,7 @@ export default function CriarVenda() {
       setSalvando(true);
 
       await criarVenda({
-        caixaId: caixaAtivo.id,
+        caixaId: CaixaAberto.id,
         metodoPagamento,
         itens,
       });

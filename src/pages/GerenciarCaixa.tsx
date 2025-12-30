@@ -15,7 +15,7 @@ interface Caixa {
 
 export default function GerenciarCaixa() {
   const navigate = useNavigate();
-  const [caixaAtivo, setCaixaAtivo] = useState<Caixa | null>(null);
+  const [CaixaAberto, setCaixaAberto] = useState<Caixa | null>(null);
   const [loading, setLoading] = useState(true);
   const [valorInicial, setValorInicial] = useState('');
   const [isModalFecharOpen, setIsModalFecharOpen] = useState(false);
@@ -30,7 +30,7 @@ export default function GerenciarCaixa() {
     try {
       setLoading(true);
       const response = await api.get('/caixas/aberto');
-      setCaixaAtivo(response.data.data || null);
+      setCaixaAberto(response.data.data || null);
     } catch (error) {
       console.error("Erro ao buscar status do caixa:", error);
     } finally {
@@ -73,7 +73,7 @@ export default function GerenciarCaixa() {
             <Loader2 className="animate-spin mb-4" size={40} />
             <p className="font-bold">Sincronizando caixa...</p>
           </div>
-        ) : !caixaAtivo ? (
+        ) : !CaixaAberto ? (
           <div className="bg-white p-8 rounded-[40px] shadow-sm border border-gray-100 text-center space-y-6">
             <div className="bg-blue-50 w-20 h-20 rounded-3xl flex items-center justify-center text-blue-600 mx-auto">
               <Calculator size={40} />
@@ -113,13 +113,13 @@ export default function GerenciarCaixa() {
                 
                 <p className="text-white/50 text-[10px] font-black uppercase mb-1">Saldo Atual em Dinheiro</p>
                 <h2 className="text-5xl font-black mb-4 tracking-tighter">
-                    R$ {(caixaAtivo.valorAtual ?? caixaAtivo.valorInicial).toFixed(2)}
+                    R$ {(CaixaAberto.valorAtual ?? CaixaAberto.valorInicial).toFixed(2)}
                 </h2>
 
                 <div className="flex items-center gap-2 text-white/40">
                     <Wallet size={14} />
                     <p className="text-[11px] font-bold uppercase">
-                        Fundo Inicial: <span className="text-white/70">R$ {Number(caixaAtivo.valorInicial).toFixed(2)}</span>
+                        Fundo Inicial: <span className="text-white/70">R$ {Number(CaixaAberto.valorInicial).toFixed(2)}</span>
                     </p>
                 </div>
               </div>
@@ -151,17 +151,17 @@ export default function GerenciarCaixa() {
         )}
       </main>
 
-      {isModalFecharOpen && caixaAtivo && (
+      {isModalFecharOpen && CaixaAberto && (
         <ModalFecharCaixa 
-          caixaId={caixaAtivo.id} 
+          caixaId={CaixaAberto.id} 
           onClose={() => setIsModalFecharOpen(false)} 
         />
       )}
 
-      {isModalMovimentarOpen && caixaAtivo && (
+      {isModalMovimentarOpen && CaixaAberto && (
         <ModalMovimentacaoCaixa 
           isOpen={isModalMovimentarOpen}
-          caixaId={caixaAtivo.id}
+          caixaId={CaixaAberto.id}
           onClose={() => setIsModalMovimentarOpen(false)}
           onSucesso={fetchCaixaStatus}
         />

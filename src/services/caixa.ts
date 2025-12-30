@@ -4,7 +4,7 @@ import { api } from "./api";
    TIPOS
 ====================== */
 
-export interface CaixaAtivo {
+export interface CaixaAberto {
   id: string;
   status: "ABERTO" | "FECHADO";
   abertoEm: string;
@@ -15,13 +15,12 @@ export interface CaixaAtivo {
 ====================== */
 
 /**
- * Retorna o caixa ativo do usuário logado
+ * Retorna o caixa Aberto do usuário logado
  * ou null se não houver caixa aberto
  */
-export default async function getCaixaAtivo(): Promise<CaixaAtivo | null> {
-  const resp = await api.get("/caixa/ativo");
+export default async function getCaixaAberto(): Promise<CaixaAberto | null> {
+  const resp = await api.get("/caixas/aberto");
 
-  // contrato esperado:
-  // { data: CaixaAtivo | null }
+
   return resp.data?.data ?? null;
 }
