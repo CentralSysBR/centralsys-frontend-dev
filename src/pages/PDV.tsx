@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  ArrowLeft, Search, ShoppingCart, X, Loader2,
-  ChevronRight, AlertCircle, Camera, Package
+  ArrowLeft, Search, ShoppingCart, Loader2,
+  AlertCircle, Camera
 } from 'lucide-react';
 import { api } from '../services/api';
 import { ModalFinalizarVenda } from '../components/ModalFinalizarVenda';
 import { ReciboVenda } from '../components/ReciboVenda';
-
+import { ProductCard } from '../components/ProductCard';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 
 interface Produto {
@@ -233,17 +233,17 @@ export default function PDV() {
           </button>
         </div>
         {SHOW_CATEGORIAS_PDV && (
-        <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-          {categorias.map(cat => (
-            <button
-              key={cat}
-              onClick={() => setCategoriaAtiva(cat)}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all ${categoriaAtiva === cat ? 'bg-[#1A2B3C] text-white' : 'bg-gray-100 text-gray-500'}`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
+          <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+            {categorias.map(cat => (
+              <button
+                key={cat}
+                onClick={() => setCategoriaAtiva(cat)}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all ${categoriaAtiva === cat ? 'bg-[#1A2B3C] text-white' : 'bg-gray-100 text-gray-500'}`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
         )}
 
       </header>
@@ -259,52 +259,32 @@ export default function PDV() {
             {produtosExibidos.map(produto => {
               const qtd = carrinho.find(i => i.id === produto.id)?.quantidade || 0;
               return (
-                <div
-  key={produto.id}
-  onClick={() => adicionarAoCarrinho(produto)}
-  className={`flex items-center justify-between p-4 bg-white rounded-2xl border transition-all relative cursor-pointer active:scale-[0.98] ${qtd > 0 ? 'border-[#2D6A4F] ring-1 ring-[#2D6A4F]' : 'border-gray-100 shadow-sm'} ${!caixaId ? 'opacity-60' : ''}`}
->
-                  {qtd > 0 && (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); removerDoCarrinho(produto.id); }}
-                      className="absolute -top-2 -left-2 bg-red-500 text-white w-6 h-6 rounded-lg flex items-center justify-center shadow-md active:scale-90 z-10"
-                    >
-                      <X size={14} strokeWidth={3} />
-                    </button>
-                  )}
+                <div key={produto.id} className="relative">
+  {qtd > 0 && (
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        removerDoCarrinho(produto.id);
+      }}
+      className="absolute -top-2 -left-2 bg-red-500 text-white w-6 h-6 rounded-lg flex items-center justify-center shadow-md active:scale-90 z-10"
+    >
+      ✕
+    </button>
+  )}
 
-                  <div className="flex items-center gap-4 flex-1">
-  <div className="w-14 h-14 rounded-xl overflow-hidden bg-gray-100 flex items-center justify-center">
-    {produto.imagemUrl ? (
-      <img
-        src={produto.imagemUrl}
-        alt={produto.nome}
-        className="w-full h-full object-cover"
-        loading="lazy"
-      />
-    ) : (
-      <div className="bg-blue-50 text-blue-500 w-full h-full flex items-center justify-center">
-        <Package size={22} />
-      </div>
-    )}
-  </div>
-
-  <div>
-    <h3 className="font-bold text-[#1A2B3C]">{produto.nome}</h3>
-    <p className="text-xs text-gray-400">Estoque: {produto.quantidadeEstoque}</p>
-    {qtd > 0 && (
-      <span className="text-[10px] font-black text-[#2D6A4F] uppercase">
-        No carrinho: {qtd}x
-      </span>
-    )}
-  </div>
+  <ProductCard
+    id={produto.id}
+    nome={produto.nome}
+    precoVenda={produto.precoVenda}
+    quantidadeEstoque={produto.quantidadeEstoque}
+    imagemUrl={produto.imagemUrl}
+    quantidadeNoCarrinho={qtd}
+    disabled={!caixaId}
+    mode="pdv"
+    onClick={() => adicionarAoCarrinho(produto)}
+  />
 </div>
 
-                  <div className="flex items-center gap-4">
-                    <p className="font-black text-[#2D6A4F]">R$ {Number(produto.precoVenda).toFixed(2)}</p>
-                    <div className="bg-gray-50 p-2 rounded-xl text-gray-400"><ChevronRight size={20} /></div>
-                  </div>
-                </div>
               );
             })}
           </div>
