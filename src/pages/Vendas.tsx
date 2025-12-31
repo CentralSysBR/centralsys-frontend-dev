@@ -4,6 +4,9 @@ import { useNavigate } from "react-router-dom";
 import { getVendas } from "../services/vendas";
 import type { Venda } from "../services/vendas";
 
+import { formatCurrencyBR } from "../utils/formatCurrencyBR";
+
+
 export default function Vendas() {
   const navigate = useNavigate();
 
@@ -72,7 +75,7 @@ export default function Vendas() {
               <td className="p-2">{venda.metodoPagamento}</td>
 
               <td className="p-2 font-semibold">
-                R$ {Number(venda.valorTotal).toFixed(2)}
+                {formatCurrencyBR(venda.valorTotal)}
               </td>
             </tr>
           ))}

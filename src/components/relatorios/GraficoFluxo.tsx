@@ -1,3 +1,4 @@
+import { formatCurrencyBR } from "../../utils/formatCurrencyBR";
 import {
   LineChart,
   Line,
@@ -33,13 +34,8 @@ export function GraficoFluxo({ dados }: Props) {
         <LineChart data={dados}>
           <XAxis dataKey="data" />
           <YAxis />
-          <Tooltip
-            formatter={(value?: number) =>
-              value !== undefined
-                ? `R$ ${value.toFixed(2)}`
-                : "R$ 0,00"
-            }
-          />
+          <Tooltip formatter={(value: number) => formatCurrencyBR(value)}
+/>
           <Line
             type="monotone"
             dataKey="total"

@@ -9,6 +9,7 @@ import { ModalFinalizarVenda } from '../components/ModalFinalizarVenda';
 import { ReciboVenda } from '../components/ReciboVenda';
 import { ProductCard } from '../components/ProductCard';
 import { PDVBarcodeScanner } from '../components/PDVBarcodeScanner';
+import { formatCurrencyBR } from '../utils/formatCurrencyBR';
 
 interface Produto {
   id: string;
@@ -283,7 +284,7 @@ export default function PDV() {
           <div className="max-w-md mx-auto flex items-center justify-between gap-4">
             <div className="flex flex-col">
               <span className="text-[10px] uppercase font-black text-gray-400 tracking-widest">Total</span>
-              <span className="text-2xl font-black text-[#1A2B3C]">R$ {totalVenda.toFixed(2)}</span>
+              <span className="text-2xl font-black text-[#1A2B3C]">{formatCurrencyBR(totalVenda)}</span>
             </div>
             <button
               onClick={() => setIsModalPagamentoOpen(true)}

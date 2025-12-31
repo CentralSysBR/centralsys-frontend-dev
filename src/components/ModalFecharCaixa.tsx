@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Lock, ArrowDownCircle, ArrowUpCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { api } from '../services/api';
-import { formatCurrencyBR } from '../utils/formatCurrency';
+import { formatCurrencyBR } from '../utils/formatCurrencyBR';
 
 
 interface ResumoFechamento {

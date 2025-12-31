@@ -1,4 +1,6 @@
 import type { ResumoFinanceiro } from "../../types/relatorios";
+import { formatCurrencyBR } from '../../utils/formatCurrencyBR';
+
 
 interface Props {
   financeiro: ResumoFinanceiro;
@@ -10,14 +12,15 @@ export function CardResumoFinanceiro({ financeiro }: Props) {
       <h2 className="font-semibold mb-2">Resumo Financeiro</h2>
 
       <p>
-        Total: R$ {financeiro.faturamentoTotal.toFixed(2)}
+        Total: {formatCurrencyBR(financeiro.faturamentoTotal)}
       </p>
       <p>
         Vendas: {financeiro.totalVendas}
       </p>
       <p>
-        Ticket Médio: R$ {financeiro.ticketMedio.toFixed(2)}
+        Ticket Médio: {formatCurrencyBR(financeiro.ticketMedio)}
       </p>
+
     </section>
   );
 }

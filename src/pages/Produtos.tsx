@@ -13,6 +13,8 @@ import {
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import { api } from '../services/api';
 import { ProductCard } from '../components/ProductCard';
+import { formatCurrencyBR } from '../utils/formatCurrencyBR';
+
 
 interface Produto {
   id: string;
@@ -474,7 +476,7 @@ export default function Produtos() {
 
                   <span className="text-gray-400 italic">Custo por unidade:</span>
 
-                  <span className="font-bold text-blue-600">R$ {formNovo.precoCusto.toFixed(2)}</span>
+                  <span className="font-bold text-blue-600">{formatCurrencyBR(formNovo.precoCusto)}</span>
 
                 </div>
 

@@ -1,3 +1,5 @@
+import { formatCurrencyBR } from '../../utils/formatCurrencyBR';
+
 interface Props {
   total: number;
   media: number;
@@ -12,11 +14,11 @@ export function CardFluxo({ total, media, insights }: Props) {
       </h2>
 
       <p className="text-3xl font-black text-blue-700">
-        R$ {total.toFixed(2)}
+        {formatCurrencyBR(total)}
       </p>
 
       <p className="text-sm text-blue-700">
-        Média diária: R$ {media.toFixed(2)}
+        Média diária: {formatCurrencyBR(media)}
       </p>
 
       {insights && insights.length > 0 && (

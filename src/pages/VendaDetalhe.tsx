@@ -1,6 +1,7 @@
 import { useParams, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { getVendaDetalhe, type Venda } from "../services/vendas";
+import { formatCurrencyBR } from "../utils/formatCurrencyBR";
 
 export default function VendaDetalhe() {
   const { id } = useParams<{ id: string }>();
@@ -43,7 +44,7 @@ export default function VendaDetalhe() {
         <p><strong>Vendedor:</strong> {venda.usuario.nome}</p>
         <p><strong>Pagamento:</strong> {venda.metodoPagamento}</p>
         <p className="font-semibold">
-          Total: R$ {Number(venda.valorTotal).toFixed(2)}
+          Total: Total: {formatCurrencyBR(venda.valorTotal)}
         </p>
       </section>
 
@@ -65,10 +66,10 @@ export default function VendaDetalhe() {
                 <td className="p-2">{item.produto.nome}</td>
                 <td className="p-2 text-right">{item.quantidade}</td>
                 <td className="p-2 text-right">
-                  R$ {Number(item.precoUnitario).toFixed(2)}
+                  {formatCurrencyBR(item.precoUnitario)}
                 </td>
                 <td className="p-2 text-right font-semibold">
-                  R$ {Number(item.precoTotal).toFixed(2)}
+                  {formatCurrencyBR(item.precoTotal)}
                 </td>
               </tr>
             ))}

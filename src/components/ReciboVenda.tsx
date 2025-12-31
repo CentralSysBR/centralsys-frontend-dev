@@ -1,5 +1,5 @@
 import { Printer, CheckCircle2, ArrowLeft } from 'lucide-react';
-import { formatCurrencyBR } from '../utils/formatCurrency';
+import { formatCurrencyBR } from '../utils/formatCurrencyBR';
 
 
 interface ItemRecibo {

@@ -18,7 +18,7 @@ export function CardLucro({ lucro, margem, variacao, insight }: Props) {
       </h2>
 
       <p className="text-3xl font-black text-green-700">
-        R$ {lucro.toFixed(2)}
+        {formatCurrencyBR(lucro)}
       </p>
 
       {temVariacao && (

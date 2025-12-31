@@ -4,7 +4,7 @@ import { Calculator, ArrowLeft, Play, StopCircle, DollarSign, Loader2, ArrowUpCi
 import { api } from '../services/api';
 import { ModalFecharCaixa } from '../components/ModalFecharCaixa';
 import { ModalMovimentacaoCaixa } from '../components/ModalMovimentacaoCaixa';
-
+import { formatCurrencyBR } from '../utils/formatCurrencyBR';
 interface Caixa {
   id: string;
   status: 'ABERTO' | 'FECHADO';
@@ -113,13 +113,13 @@ export default function GerenciarCaixa() {
                 
                 <p className="text-white/50 text-[10px] font-black uppercase mb-1">Saldo Atual em Dinheiro</p>
                 <h2 className="text-5xl font-black mb-4 tracking-tighter">
-                    R$ {(CaixaAberto.valorAtual ?? CaixaAberto.valorInicial).toFixed(2)}
+                    {formatCurrencyBR(CaixaAberto.valorAtual ?? CaixaAberto.valorInicial)}
                 </h2>
 
                 <div className="flex items-center gap-2 text-white/40">
                     <Wallet size={14} />
                     <p className="text-[11px] font-bold uppercase">
-                        Fundo Inicial: <span className="text-white/70">R$ {Number(CaixaAberto.valorInicial).toFixed(2)}</span>
+                        Fundo Inicial: <span className="text-white/70">{formatCurrencyBR(CaixaAberto.valorInicial)}</span>
                     </p>
                 </div>
               </div>

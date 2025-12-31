@@ -1,6 +1,6 @@
 import { Package } from 'lucide-react';
-import { formatCurrencyBR } from '@/utils/formatCurrencyBR';
-import { normalizeDisplayText } from '@/utils/normalizeDisplayText';
+import { formatCurrencyBR } from '../utils/formatCurrencyBR';
+import { normalizeDisplayText } from '../utils/normalizeDisplayText';
 
 interface ProductCardProps {
     id: string;

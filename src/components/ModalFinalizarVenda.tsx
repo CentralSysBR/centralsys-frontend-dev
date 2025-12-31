@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { X, CheckCircle2, DollarSign, CreditCard, QrCode, Loader2, AlertCircle } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
-import { formatCurrencyBR } from '../utils/formatCurrency';
+import { formatCurrencyBR } from '../utils/formatCurrencyBR';
 
 interface ItemCarrinho {
   id: string;

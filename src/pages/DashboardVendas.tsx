@@ -10,6 +10,8 @@ import {
   ArrowLeft
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { formatCurrencyBR } from '../utils/formatCurrencyBR';
+
 
 interface Venda {
   id: string;
@@ -72,7 +74,7 @@ export default function DashboardVendas() {
             </div>
           </div>
           <p className="text-white/60 text-sm font-medium">Total Acumulado</p>
-          <h2 className="text-3xl font-black mt-1">R$ {totalGeral.toFixed(2)}</h2>
+          <h2 className="text-3xl font-black mt-1">{formatCurrencyBR(totalGeral)}</h2>
         </div>
 
         <h3 className="font-bold text-gray-700 mt-6 mb-2 flex items-center gap-2">
@@ -91,7 +93,7 @@ export default function DashboardVendas() {
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <span className="font-black text-lg text-gray-900">
-                        R$ {Number(venda.valorTotal).toFixed(2)}
+                        {formatCurrencyBR(venda.valorTotal)}
                       </span>
                       <span className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase bg-gray-100 text-gray-600">
                         {venda.metodoPagamento}
