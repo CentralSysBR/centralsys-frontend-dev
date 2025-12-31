@@ -2,6 +2,10 @@ import { useState, useEffect } from 'react';
 import { X, CheckCircle2, DollarSign, CreditCard, QrCode, Loader2, AlertCircle } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { formatCurrencyBR } from '../utils/formatCurrencyBR';
+import { parseCurrencyBR } from "../utils/parseCurrencyBR";
+import { maskCurrencyInputBR } from '../utils/maskCurrencyInputBR';
+
+
 
 interface ItemCarrinho {
   id: string;
@@ -19,36 +23,35 @@ interface ModalFinalizarVendaProps {
   isFinalizando: boolean;
 }
 
-export function ModalFinalizarVenda({ 
-  isOpen, onClose, carrinho, totalVenda, onConfirm, isFinalizando 
+export function ModalFinalizarVenda({
+  isOpen, onClose, carrinho, totalVenda, onConfirm, isFinalizando
 }: ModalFinalizarVendaProps) {
   const [metodoPagamento, setMetodoPagamento] = useState<string | null>(null);
-  const [valorRecebido, setValorRecebido] = useState<string>('');
   const [troco, setTroco] = useState(0);
-
+  const [valorRecebidoInput, setValorRecebidoInput] = useState('');
+  const valorRecebidoNumero = parseCurrencyBR(valorRecebidoInput);
   const CHAVE_PIX = "stdr@samuelss.dev";
 
   // Cálculo de troco em tempo real
   useEffect(() => {
-    const recebido = parseFloat(valorRecebido) || 0;
-    if (metodoPagamento === 'DINHEIRO' && recebido > totalVenda) {
-      setTroco(recebido - totalVenda);
+    if (metodoPagamento === 'DINHEIRO' && valorRecebidoNumero > totalVenda) {
+      setTroco(valorRecebidoNumero - totalVenda);
     } else {
       setTroco(0);
     }
-  }, [valorRecebido, totalVenda, metodoPagamento]);
+  }, [valorRecebidoNumero, totalVenda, metodoPagamento]);
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black/70 z-[100] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
-        
+
         {/* Header */}
         <div className="p-6 border-b flex justify-between items-center bg-gray-50">
           <h2 className="font-bold text-xl text-[#1A2B3C]">Finalizar Venda</h2>
           <button onClick={onClose} className="p-2 bg-white rounded-full shadow-sm hover:bg-gray-100 transition-colors">
-            <X size={20}/>
+            <X size={20} />
           </button>
         </div>
 
@@ -87,11 +90,14 @@ export function ModalFinalizarVenda({
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold text-gray-400 uppercase">Valor Recebido</label>
-                  <input 
-                    type="number"
-                    value={valorRecebido}
-                    onChange={(e) => setValorRecebido(e.target.value)}
-                    placeholder="0.00"
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="R$ 0,00"
+                    value={valorRecebidoInput}
+                    onChange={(e) => {
+                      setValorRecebidoInput(maskCurrencyInputBR(e.target.value));
+                    }}
                     autoFocus
                     className="w-full p-3 bg-blue-50 border-2 border-blue-100 rounded-2xl outline-none focus:border-blue-400 font-black text-blue-700 text-lg transition-all"
                   />
@@ -103,9 +109,9 @@ export function ModalFinalizarVenda({
                   </div>
                 </div>
               </div>
-              {parseFloat(valorRecebido) < totalVenda && parseFloat(valorRecebido) > 0 && (
+              {valorRecebidoNumero > 0 && valorRecebidoNumero < totalVenda && (
                 <p className="text-[10px] text-red-500 font-bold flex items-center gap-1">
-                  <AlertCircle size={12}/> Valor insuficiente
+                  <AlertCircle size={12} /> Valor insuficiente
                 </p>
               )}
             </div>
@@ -120,9 +126,16 @@ export function ModalFinalizarVenda({
           )}
 
           {/* Botão Confirmar */}
-          <button 
-            onClick={() => metodoPagamento && onConfirm(metodoPagamento, parseFloat(valorRecebido), troco)}
-            disabled={!metodoPagamento || isFinalizando || (metodoPagamento === 'DINHEIRO' && (parseFloat(valorRecebido) || 0) < totalVenda)}
+          <button
+            onClick={() =>
+              metodoPagamento &&
+              onConfirm(metodoPagamento, valorRecebidoNumero, troco)
+            }
+            disabled={
+              !metodoPagamento ||
+              isFinalizando ||
+              (metodoPagamento === 'DINHEIRO' && valorRecebidoNumero < totalVenda)
+            }
             className="w-full bg-[#1A2B3C] text-white py-5 rounded-2xl font-bold text-lg shadow-xl active:scale-[0.98] transition-all disabled:opacity-20 flex items-center justify-center gap-3"
           >
             {isFinalizando ? <Loader2 className="animate-spin text-white" /> : <CheckCircle2 size={24} />}

@@ -14,6 +14,8 @@ import { Html5QrcodeScanner } from 'html5-qrcode';
 import { api } from '../services/api';
 import { ProductCard } from '../components/ProductCard';
 import { formatCurrencyBR } from '../utils/formatCurrencyBR';
+import { maskCurrencyInputBR } from '../utils/maskCurrencyInputBR';
+import { parseCurrencyBR } from '../utils/parseCurrencyBR';
 
 
 interface Produto {
@@ -37,6 +39,7 @@ interface ProdutoGTINResponse {
 }
 
 export default function Produtos() {
+  const [novoPrecoVendaInput, setNovoPrecoVendaInput] = useState('');
   const navigate = useNavigate();
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [busca, setBusca] = useState('');
@@ -50,6 +53,12 @@ export default function Produtos() {
   // Estados de Operação
   const [produtoSelecionado, setProdutoSelecionado] = useState<Produto | null>(null);
   const [isSalvando, setIsSalvando] = useState(false);
+
+  // Cria estados de input mascarados, para campos de moeda BR
+  const [precoCustoInput, setPrecoCustoInput] = useState('');
+  const [valorLoteInput, setValorLoteInput] = useState('');
+  const [precoVendaInput, setPrecoVendaInput] = useState('');
+
 
   // Calculadora de Custo e Novo Produto
   const [modoCusto, setModoCusto] = useState<'unitario' | 'lote'>('unitario');
@@ -137,11 +146,19 @@ export default function Produtos() {
           precoCusto: 0,
           quantidadeEstoque: 0
         });
+
+        // Inicializa inputs mascarados
+        setPrecoCustoInput(formatCurrencyBR(0));
+        setValorLoteInput(formatCurrencyBR(0));
+        setPrecoVendaInput(formatCurrencyBR(0));
       } else {
         setFormNovo(prev => ({
           ...prev,
           codigoBarras: codigo
         }));
+        setPrecoCustoInput(formatCurrencyBR(0));
+        setValorLoteInput(formatCurrencyBR(0));
+        setPrecoVendaInput(formatCurrencyBR(0));
       }
 
       setIsModalNovoOpen(true);
@@ -157,16 +174,22 @@ export default function Produtos() {
   // Calculadora de custo
   useEffect(() => {
     if (modoCusto === 'lote' && qtdLote > 0) {
+      const custo = valorLote / qtdLote;
+
       setFormNovo(prev => ({
         ...prev,
-        precoCusto: valorLote / qtdLote
+        precoCusto: custo
       }));
+
+      // Sincroniza input mascarado
+      setPrecoCustoInput(formatCurrencyBR(custo));
     }
   }, [valorLote, qtdLote, modoCusto]);
 
   function abrirEntrada(produto: Produto) {
     setProdutoSelecionado(produto);
     setNovoPrecoVenda(Number(produto.precoVenda));
+    setNovoPrecoVendaInput(formatCurrencyBR(produto.precoVenda));
     setQtdEntrada(0);
     setIsModalEntradaOpen(true);
   }
@@ -291,25 +314,25 @@ export default function Produtos() {
             {produtosFiltrados.map(produto => (
 
               <div
-  key={produto.id}
-  className="relative"
-  onClick={() => abrirEntrada(produto)}
->
-  <ProductCard
-    id={produto.id}
-    nome={produto.nome}
-    precoVenda={produto.precoVenda}
-    quantidadeEstoque={produto.quantidadeEstoque}
-    imagemUrl={produto.imagemUrl}
-    mode="estoque"
-  />
+                key={produto.id}
+                className="relative"
+                onClick={() => abrirEntrada(produto)}
+              >
+                <ProductCard
+                  id={produto.id}
+                  nome={produto.nome}
+                  precoVenda={produto.precoVenda}
+                  quantidadeEstoque={produto.quantidadeEstoque}
+                  imagemUrl={produto.imagemUrl}
+                  mode="estoque"
+                />
 
-  {produto.quantidadeEstoque <= 5 && (
-    <span className="absolute top-2 right-2 text-[9px] font-black px-2 py-1 rounded-full bg-red-100 text-red-600">
-      ESTOQUE BAIXO
-    </span>
-  )}
-</div>
+                {produto.quantidadeEstoque <= 5 && (
+                  <span className="absolute top-2 right-2 text-[9px] font-black px-2 py-1 rounded-full bg-red-100 text-red-600">
+                    ESTOQUE BAIXO
+                  </span>
+                )}
+              </div>
 
 
             ))}
@@ -448,7 +471,18 @@ export default function Produtos() {
 
                       <p className="text-[9px] font-bold text-gray-400 uppercase mb-1">Valor Total</p>
 
-                      <input type="number" className="bg-transparent w-full font-bold outline-none" value={valorLote || ''} onChange={e => setValorLote(Number(e.target.value))} />
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        placeholder="R$ 0,00"
+                        className="bg-transparent w-full font-bold outline-none"
+                        value={valorLoteInput}
+                        onChange={(e) => {
+                          const masked = maskCurrencyInputBR(e.target.value);
+                          setValorLoteInput(masked);
+                          setValorLote(parseCurrencyBR(masked));
+                        }}
+                      />
 
                     </div>
 
@@ -466,7 +500,21 @@ export default function Produtos() {
 
                   <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
 
-                    <input type="number" placeholder="0,00" className="bg-transparent w-full font-bold outline-none" value={formNovo.precoCusto || ''} onChange={e => setFormNovo({ ...formNovo, precoCusto: Number(e.target.value) })} />
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="R$ 0,00"
+                      className="bg-transparent w-full font-bold outline-none"
+                      value={precoCustoInput}
+                      onChange={(e) => {
+                        const masked = maskCurrencyInputBR(e.target.value);
+                        setPrecoCustoInput(masked);
+                        setFormNovo({
+                          ...formNovo,
+                          precoCusto: parseCurrencyBR(masked),
+                        });
+                      }}
+                    />
 
                   </div>
 
@@ -490,7 +538,21 @@ export default function Produtos() {
 
                   <label className="text-[10px] font-bold text-green-600 uppercase ml-2">Venda (R$)</label>
 
-                  <input type="number" className="w-full p-4 bg-green-50 rounded-2xl outline-none border border-green-100 font-black text-green-700" value={formNovo.precoVenda || ''} onChange={e => setFormNovo({ ...formNovo, precoVenda: Number(e.target.value) })} />
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="R$ 0,00"
+                    className="w-full p-4 bg-green-50 rounded-2xl outline-none border border-green-100 font-black text-green-700"
+                    value={precoVendaInput}
+                    onChange={(e) => {
+                      const masked = maskCurrencyInputBR(e.target.value);
+                      setPrecoVendaInput(masked);
+                      setFormNovo({
+                        ...formNovo,
+                        precoVenda: parseCurrencyBR(masked),
+                      });
+                    }}
+                  />
 
                 </div>
 
@@ -578,7 +640,18 @@ export default function Produtos() {
 
               <p className="text-[10px] font-bold text-blue-600 uppercase mb-2">Novo Preço de Venda (R$)</p>
 
-              <input type="number" step="0.01" className="w-full bg-transparent text-xl font-bold text-[#1A2B3C] outline-none" value={novoPrecoVenda} onChange={(e) => setNovoPrecoVenda(Number(e.target.value))} />
+              <input
+                type="text"
+                inputMode="numeric"
+                placeholder="R$ 0,00"
+                className="w-full bg-transparent text-xl font-bold text-[#1A2B3C] outline-none"
+                value={novoPrecoVendaInput}
+                onChange={(e) => {
+                  const masked = maskCurrencyInputBR(e.target.value);
+                  setNovoPrecoVendaInput(masked);
+                  setNovoPrecoVenda(parseCurrencyBR(masked));
+                }}
+              />
 
             </div>
 
