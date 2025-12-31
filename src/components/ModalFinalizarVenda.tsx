@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { X, CheckCircle2, DollarSign, CreditCard, QrCode, Loader2, AlertCircle } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
+import { formatCurrencyBR } from '../utils/formatCurrency';
 
 interface ItemCarrinho {
   id: string;
@@ -59,13 +60,13 @@ export function ModalFinalizarVenda({
               {carrinho.map(item => (
                 <div key={item.id} className="flex justify-between text-sm items-center bg-gray-50 p-3 rounded-xl">
                   <span className="text-gray-600 font-medium">{item.quantidade}x {item.nome}</span>
-                  <span className="font-bold text-[#1A2B3C]">R$ {(item.precoVenda * item.quantidade).toFixed(2)}</span>
+                  <span className="font-bold text-[#1A2B3C]">{formatCurrencyBR(item.precoVenda * item.quantidade)}</span>
                 </div>
               ))}
             </div>
             <div className="flex justify-between items-center pt-4 border-t-2 border-dashed border-gray-100 text-green-600">
               <span className="font-bold text-gray-500 uppercase text-xs">Total a Pagar</span>
-              <span className="font-black text-3xl font-mono">R$ {totalVenda.toFixed(2)}</span>
+              <span className="font-black text-3xl font-mono">{formatCurrencyBR(totalVenda)}</span>
             </div>
           </div>
 
@@ -98,7 +99,7 @@ export function ModalFinalizarVenda({
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold text-gray-400 uppercase">Troco</label>
                   <div className={`p-3 rounded-2xl border-2 font-black text-lg flex items-center justify-center ${troco > 0 ? 'bg-green-50 border-green-200 text-green-600' : 'bg-gray-50 border-gray-100 text-gray-300'}`}>
-                    R$ {troco.toFixed(2)}
+                    {formatCurrencyBR(troco)}
                   </div>
                 </div>
               </div>
@@ -114,7 +115,7 @@ export function ModalFinalizarVenda({
           {metodoPagamento === 'PIX' && (
             <div className="flex flex-col items-center p-6 bg-blue-50 rounded-3xl border border-blue-100 animate-in slide-in-from-top-2">
               <QRCodeSVG value={`00020126330014BR.GOV.BCB.PIX0114${CHAVE_PIX}520400005303986540${totalVenda.toFixed(2)}5802BR5905VENDA6009SAO PAULO62070503***6304`} size={140} />
-              <p className="text-[10px] text-blue-600 font-black mt-4 uppercase tracking-tighter">Escaneie para pagar R$ {totalVenda.toFixed(2)}</p>
+              <p className="text-[10px] text-blue-600 font-black mt-4 uppercase tracking-tighter">Escaneie para pagar {formatCurrencyBR(totalVenda)}</p>
             </div>
           )}
 
