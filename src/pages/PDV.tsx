@@ -180,10 +180,21 @@ export default function PDV() {
     window.location.replace('/dashboard');
   }
 
-  const produtosExibidos = produtos.filter(p => {
-    const bateCategoria = categoriaAtiva === 'Todos' || p.categoria === categoriaAtiva;
-    return bateCategoria && normalizarTexto(p.nome).includes(normalizarTexto(busca));
-  });
+  const produtosExibidos = produtos
+    .filter(p => {
+      const bateCategoria = categoriaAtiva === 'Todos' || p.categoria === categoriaAtiva;
+      return bateCategoria && normalizarTexto(p.nome).includes(normalizarTexto(busca));
+    })
+    .sort((a, b) => {
+      const qtdA = carrinho.find(i => i.id === a.id)?.quantidade || 0;
+      const qtdB = carrinho.find(i => i.id === b.id)?.quantidade || 0;
+
+      // Produtos no carrinho vêm primeiro
+      if (qtdA > 0 && qtdB === 0) return -1;
+      if (qtdA === 0 && qtdB > 0) return 1;
+
+      return 0;
+    });
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-32">
