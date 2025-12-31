@@ -76,6 +76,24 @@ export interface DashboardRelatorios {
   };
 }
 
+export interface FluxoFinanceiroDetalhado {
+  entradas: {
+    vendas: number;
+  };
+  saidas: {
+    despesas: number;
+    custosOperacionais: number;
+  };
+  saldoLiquido: number;
+}
+
+export async function getFluxoFinanceiroDetalhado() {
+  const res = await api.get<ApiResponse<FluxoFinanceiroDetalhado>>(
+    "/relatorios/fluxo-detalhado"
+  );
+  return res.data;
+}
+
 /* ======================
    REQUESTS
 ====================== */
@@ -100,3 +118,4 @@ export async function getRelatorioFluxo(): Promise<
   const response = await api.get("/relatorios/financeiro/fluxo");
   return response.data;
 }
+
