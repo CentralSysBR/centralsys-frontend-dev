@@ -8,7 +8,7 @@ import { api } from '../services/api';
 import { ModalFinalizarVenda } from '../components/ModalFinalizarVenda';
 import { ReciboVenda } from '../components/ReciboVenda';
 import { ProductCard } from '../components/ProductCard';
-import { Html5QrcodeScanner } from 'html5-qrcode';
+import { PDVBarcodeScanner } from '../components/PDVBarcodeScanner';
 
 interface Produto {
   id: string;
@@ -70,31 +70,7 @@ export default function PDV() {
     }
     inicializarDados();
   }, []);
-
-  useEffect(() => {
-    let scanner: Html5QrcodeScanner | null = null;
-
-    if (isScannerOpen) {
-      scanner = new Html5QrcodeScanner(
-        'reader',
-        { fps: 10, qrbox: 250 },
-        false
-      );
-
-      scanner.render(
-        (decodedText) => {
-          handleBarcodeScanned(decodedText);
-          scanner?.clear();
-          setIsScannerOpen(false);
-        },
-        () => { }
-      );
-    }
-
-    return () => {
-      scanner?.clear();
-    };
-  }, [isScannerOpen]);
+  
 
   const categorias = ['Todos', ...new Set(produtos.map(p => p.categoria))];
   const totalVenda = carrinho.reduce((sum, item) => sum + (Number(item.precoVenda) * item.quantidade), 0);
@@ -238,9 +214,9 @@ export default function PDV() {
 
           <button
             onClick={() => setIsScannerOpen(true)}
-            className="w-14 flex items-center justify-center bg-blue-50 text-blue-600 rounded-xl active:scale-95 transition-all"
+            className="p-2 bg-blue-50 text-blue-600 rounded-xl"
           >
-            <Camera size={22} />
+            <Camera size={24} />
           </button>
         </div>
         {SHOW_CATEGORIAS_PDV && (
@@ -347,26 +323,14 @@ export default function PDV() {
           onFinalizar={resetarPDV}
         />
       )}
-      {isScannerOpen && (
-        <div className="fixed inset-0 bg-black z-[100] flex flex-col">
-          <div className="p-6 flex justify-between items-center text-white">
-            <h2 className="font-bold text-lg">Escanear Código</h2>
-            <button
-              onClick={() => setIsScannerOpen(false)}
-              className="p-2 bg-white/10 rounded-full"
-            >
-              <X size={28} />
-            </button>
-          </div>
-
-          <div className="flex-1 flex items-center justify-center p-4">
-            <div
-              id="reader"
-              className="w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl bg-black"
-            />
-          </div>
-        </div>
-      )}
+      
+      <PDVBarcodeScanner
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+        onScan={(codigo: string) => {
+          handleBarcodeScanned(codigo);
+        }}
+      />
     </div>
   );
 }
