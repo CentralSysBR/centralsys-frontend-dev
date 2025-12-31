@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Search, ShoppingCart, Loader2,
-  AlertCircle, Camera
+  AlertCircle, Camera, X
 } from 'lucide-react';
 import { api } from '../services/api';
 import { ModalFinalizarVenda } from '../components/ModalFinalizarVenda';
@@ -260,30 +260,30 @@ export default function PDV() {
               const qtd = carrinho.find(i => i.id === produto.id)?.quantidade || 0;
               return (
                 <div key={produto.id} className="relative">
-  {qtd > 0 && (
-    <button
-      onClick={(e) => {
-        e.stopPropagation();
-        removerDoCarrinho(produto.id);
-      }}
-      className="absolute -top-2 -left-2 bg-red-500 text-white w-6 h-6 rounded-lg flex items-center justify-center shadow-md active:scale-90 z-10"
-    >
-      ✕
-    </button>
-  )}
+                  {qtd > 0 && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removerDoCarrinho(produto.id);
+                      }}
+                      className="absolute -top-2 -left-2 bg-red-500 text-white w-6 h-6 rounded-lg flex items-center justify-center shadow-md active:scale-90 z-10"
+                    >
+                      ✕
+                    </button>
+                  )}
 
-  <ProductCard
-    id={produto.id}
-    nome={produto.nome}
-    precoVenda={produto.precoVenda}
-    quantidadeEstoque={produto.quantidadeEstoque}
-    imagemUrl={produto.imagemUrl}
-    quantidadeNoCarrinho={qtd}
-    disabled={!caixaId}
-    mode="pdv"
-    onClick={() => adicionarAoCarrinho(produto)}
-  />
-</div>
+                  <ProductCard
+                    id={produto.id}
+                    nome={produto.nome}
+                    precoVenda={produto.precoVenda}
+                    quantidadeEstoque={produto.quantidadeEstoque}
+                    imagemUrl={produto.imagemUrl}
+                    quantidadeNoCarrinho={qtd}
+                    disabled={!caixaId}
+                    mode="pdv"
+                    onClick={() => adicionarAoCarrinho(produto)}
+                  />
+                </div>
 
               );
             })}
@@ -335,6 +335,26 @@ export default function PDV() {
           troco={dadosVendaFinalizada.troco}
           onFinalizar={resetarPDV}
         />
+      )}
+      {isScannerOpen && (
+        <div className="fixed inset-0 bg-black z-[100] flex flex-col">
+          <div className="p-6 flex justify-between items-center text-white">
+            <h2 className="font-bold text-lg">Escanear Código</h2>
+            <button
+              onClick={() => setIsScannerOpen(false)}
+              className="p-2 bg-white/10 rounded-full"
+            >
+              <X size={28} />
+            </button>
+          </div>
+
+          <div className="flex-1 flex items-center justify-center p-4">
+            <div
+              id="reader"
+              className="w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl bg-black"
+            />
+          </div>
+        </div>
       )}
     </div>
   );
