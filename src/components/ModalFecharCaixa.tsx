@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Lock, ArrowDownCircle, ArrowUpCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { api } from '../services/api';
+import { formatCurrencyBR } from '../utils/formatCurrency';
+
 
 interface ResumoFechamento {
   caixa: {
@@ -54,8 +56,8 @@ export function ModalFecharCaixa({ caixaId, onClose, onSucesso }: ModalFecharCai
               <h2 className="text-3xl font-black text-[#1A2B3C]">Encerrar Turno?</h2>
               <p className="text-gray-500 text-sm">O sistema irá calcular todas as vendas e movimentações para gerar o saldo final.</p>
             </div>
-            
-            <button 
+
+            <button
               onClick={confirmarFechamento}
               disabled={loading}
               className="w-full bg-[#1A2B3C] text-white py-5 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 active:scale-95 transition-all"
@@ -82,20 +84,20 @@ export function ModalFecharCaixa({ caixaId, onClose, onSucesso }: ModalFecharCai
 
             <div className="bg-gray-50 p-4 rounded-2xl border flex justify-between">
               <div className="flex items-center gap-2 text-red-500 font-bold text-[10px]">
-                <ArrowDownCircle size={14} /> SANGRIAS: R$ {resultado.resumo.SANGRIAS.toFixed(2)}
+                <ArrowDownCircle size={14} /> SANGRIAS: {formatCurrencyBR(resultado.resumo.SANGRIAS)}
               </div>
               <div className="flex items-center gap-2 text-green-500 font-bold text-[10px]">
-                <ArrowUpCircle size={14} /> REFORÇOS: R$ {resultado.resumo.REFORCOS.toFixed(2)}
+                <ArrowUpCircle size={14} /> REFORÇOS: REFORÇOS: {formatCurrencyBR(resultado.resumo.REFORCOS)}
               </div>
             </div>
 
             <div className="bg-gray-900 p-6 rounded-[32px] text-center shadow-xl">
               <p className="text-white/40 text-[10px] font-black uppercase tracking-widest">Saldo Final Esperado</p>
-              <p className="text-white text-4xl font-black">R$ {resultado.caixa.valorFinal.toFixed(2)}</p>
+              <p className="text-white text-4xl font-black">{formatCurrencyBR(resultado.caixa.valorFinal)}</p>
             </div>
 
-            <button 
-              onClick={() => window.location.replace('/dashboard')} 
+            <button
+              onClick={() => window.location.replace('/dashboard')}
               className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-blue-100 active:scale-95 transition-all"
             >
               Concluir e Sair
@@ -111,7 +113,9 @@ function ResumoCard({ label, value, color }: any) {
   return (
     <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
       <p className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">{label}</p>
-      <p className={`text-lg font-black ${color}`}>R$ {Number(value).toFixed(2)}</p>
+      <p className={`text-lg font-black ${color}`}>
+        {formatCurrencyBR(value)}
+      </p>
     </div>
   );
 }
