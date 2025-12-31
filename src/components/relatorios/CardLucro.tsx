@@ -1,4 +1,6 @@
 import { ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { formatCurrencyBR } from "../../utils/formatCurrencyBR";
+
 
 interface Props {
   lucro: number;

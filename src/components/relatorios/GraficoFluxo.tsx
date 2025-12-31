@@ -34,7 +34,11 @@ export function GraficoFluxo({ dados }: Props) {
         <LineChart data={dados}>
           <XAxis dataKey="data" />
           <YAxis />
-          <Tooltip formatter={(value: number) => formatCurrencyBR(value)}
+          <Tooltip
+  formatter={(value) => {
+    if (typeof value !== "number") return formatCurrencyBR(0);
+    return formatCurrencyBR(value);
+  }}
 />
           <Line
             type="monotone"
