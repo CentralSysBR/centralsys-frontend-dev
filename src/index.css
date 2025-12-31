@@ -13,3 +13,20 @@
 #root {
   width: 100%;
 }
+
+/* ================================
+   UX Mobile – prevenir seleção acidental
+   ================================ */
+
+* {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+
+/* Permitir seleção apenas onde faz sentido */
+input,
+textarea,
+[contenteditable="true"] {
+  user-select: text;
+}
