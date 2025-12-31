@@ -4,7 +4,6 @@ import {
   ArrowLeft,
   Search,
   Plus,
-  Package,
   Loader2,
   Barcode,
   X,
@@ -13,6 +12,7 @@ import {
 } from 'lucide-react';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import { api } from '../services/api';
+import { ProductCard } from '../components/ProductCard';
 
 interface Produto {
   id: string;
@@ -289,64 +289,26 @@ export default function Produtos() {
             {produtosFiltrados.map(produto => (
 
               <div
+  key={produto.id}
+  className="relative"
+  onClick={() => abrirEntrada(produto)}
+>
+  <ProductCard
+    id={produto.id}
+    nome={produto.nome}
+    precoVenda={produto.precoVenda}
+    quantidadeEstoque={produto.quantidadeEstoque}
+    imagemUrl={produto.imagemUrl}
+    mode="estoque"
+  />
 
-                key={produto.id}
+  {produto.quantidadeEstoque <= 5 && (
+    <span className="absolute top-2 right-2 text-[9px] font-black px-2 py-1 rounded-full bg-red-100 text-red-600">
+      ESTOQUE BAIXO
+    </span>
+  )}
+</div>
 
-                onClick={() => abrirEntrada(produto)}
-
-                className="bg-white p-4 rounded-2xl border border-gray-100 flex items-center justify-between active:scale-[0.98] transition-all cursor-pointer shadow-sm"
-
-              >
-
-                <div className="flex items-center gap-4">
-
-                  <div className="w-14 h-14 rounded-xl overflow-hidden flex items-center justify-center bg-gray-100">
-                    {produto.imagemUrl ? (
-                      <img
-                        src={produto.imagemUrl}
-                        alt={produto.nome}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                        onError={(e) => {
-                          (e.currentTarget as HTMLImageElement).style.display = 'none';
-                        }}
-                      />
-                    ) : (
-                      <div
-                        className={`w-full h-full flex items-center justify-center ${produto.quantidadeEstoque <= 5
-                            ? 'bg-red-50 text-red-500'
-                            : 'bg-blue-50 text-blue-500'
-                          }`}
-                      >
-                        <Package size={24} />
-                      </div>
-                    )}
-                  </div>
-
-
-                  <div>
-
-                    <h3 className="font-bold text-[#1A2B3C]">{produto.nome}</h3>
-
-                    <span className={`text-[10px] font-black px-2 py-0.5 rounded ${produto.quantidadeEstoque <= 5 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'}`}>
-
-                      ESTOQUE: {produto.quantidadeEstoque}
-
-                    </span>
-
-                  </div>
-
-                </div>
-
-                <div className="text-right text-[#1A2B3C]">
-
-                  <p className="font-black">R$ {Number(produto.precoVenda).toFixed(2)}</p>
-
-                  <p className="text-[10px] text-blue-600 font-bold uppercase">Ajustar</p>
-
-                </div>
-
-              </div>
 
             ))}
 
