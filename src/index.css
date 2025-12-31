@@ -30,3 +30,12 @@ textarea,
 [contenteditable="true"] {
   user-select: text;
 }
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cursor-pointer {
+  user-select: none;
+}
