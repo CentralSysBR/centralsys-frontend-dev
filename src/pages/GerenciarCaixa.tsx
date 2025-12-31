@@ -5,11 +5,15 @@ import { api } from '../services/api';
 import { ModalFecharCaixa } from '../components/ModalFecharCaixa';
 import { ModalMovimentacaoCaixa } from '../components/ModalMovimentacaoCaixa';
 import { formatCurrencyBR } from '../utils/formatCurrencyBR';
+import { maskCurrencyInputBR } from '../utils/maskCurrencyInputBR';
+import { parseCurrencyBR } from '../utils/parseCurrencyBR';
+
+
 interface Caixa {
   id: string;
   status: 'ABERTO' | 'FECHADO';
   valorInicial: number;
-  valorAtual?: number; 
+  valorAtual?: number;
   abertoEm: string;
 }
 
@@ -17,8 +21,7 @@ export default function GerenciarCaixa() {
   const navigate = useNavigate();
   const [CaixaAberto, setCaixaAberto] = useState<Caixa | null>(null);
   const [loading, setLoading] = useState(true);
-  const [valorInicial, setValorInicial] = useState('');
-  const [isModalFecharOpen, setIsModalFecharOpen] = useState(false);
+  const [valorInicial, setValorInicial] = useState(formatCurrencyBR(0)); const [isModalFecharOpen, setIsModalFecharOpen] = useState(false);
   const [isModalMovimentarOpen, setIsModalMovimentarOpen] = useState(false);
   const [isFinalizando, setIsFinalizando] = useState(false);
 
@@ -39,7 +42,8 @@ export default function GerenciarCaixa() {
   }
 
   async function handleAbrirCaixa() {
-    const valor = parseFloat(valorInicial);
+    const valor = parseCurrencyBR(valorInicial);
+
     if (isNaN(valor) || valor < 0) {
       alert("Informe um valor inicial válido.");
       return;
@@ -82,19 +86,24 @@ export default function GerenciarCaixa() {
               <h2 className="text-2xl font-black text-[#1A2B3C]">Caixa Fechado</h2>
               <p className="text-gray-400 font-medium">Inicie o turno para começar a vender</p>
             </div>
-            
+
             <div className="max-w-xs mx-auto">
               <label className="text-[10px] font-black uppercase text-gray-400 block mb-2">Fundo de Gaveta (R$)</label>
-              <input 
-                type="number"
-                placeholder="0.00"
+              <input
+                type="text"
+                inputMode="numeric"
+                placeholder="R$ 0,00"
                 className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl p-4 text-center text-2xl font-black text-[#1A2B3C] outline-none focus:border-blue-500 transition-all"
                 value={valorInicial}
-                onChange={(e) => setValorInicial(e.target.value)}
+                onChange={(e) => {
+                  const masked = maskCurrencyInputBR(e.target.value);
+                  setValorInicial(masked);
+                }}
               />
+
             </div>
 
-            <button 
+            <button
               onClick={handleAbrirCaixa}
               disabled={isFinalizando}
               className="w-full bg-[#1A2B3C] text-white py-5 rounded-2xl font-bold shadow-xl shadow-gray-200 flex items-center justify-center gap-2 active:scale-95 transition-all disabled:opacity-50"
@@ -107,20 +116,20 @@ export default function GerenciarCaixa() {
             <div className="bg-[#1A2B3C] p-8 rounded-[40px] text-white shadow-2xl relative overflow-hidden">
               <div className="relative z-10">
                 <div className="flex items-center gap-2 mb-4">
-                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                    <p className="text-blue-300 text-[10px] font-black uppercase tracking-widest">Turno em Andamento</p>
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                  <p className="text-blue-300 text-[10px] font-black uppercase tracking-widest">Turno em Andamento</p>
                 </div>
-                
+
                 <p className="text-white/50 text-[10px] font-black uppercase mb-1">Saldo Atual em Dinheiro</p>
                 <h2 className="text-5xl font-black mb-4 tracking-tighter">
-                    {formatCurrencyBR(CaixaAberto.valorAtual ?? CaixaAberto.valorInicial)}
+                  {formatCurrencyBR(CaixaAberto.valorAtual ?? CaixaAberto.valorInicial)}
                 </h2>
 
                 <div className="flex items-center gap-2 text-white/40">
-                    <Wallet size={14} />
-                    <p className="text-[11px] font-bold uppercase">
-                        Fundo Inicial: <span className="text-white/70">{formatCurrencyBR(CaixaAberto.valorInicial)}</span>
-                    </p>
+                  <Wallet size={14} />
+                  <p className="text-[11px] font-bold uppercase">
+                    Fundo Inicial: <span className="text-white/70">{formatCurrencyBR(CaixaAberto.valorInicial)}</span>
+                  </p>
                 </div>
               </div>
               <Calculator className="absolute -right-6 -bottom-6 text-white/5 w-40 h-40" />
@@ -131,17 +140,17 @@ export default function GerenciarCaixa() {
                 <div className="bg-green-50 p-4 rounded-2xl text-green-600"><DollarSign size={32} /></div>
                 <span className="font-black text-sm uppercase text-[#1A2B3C]">Vender</span>
               </button>
-              
+
               <button onClick={() => setIsModalMovimentarOpen(true)} className="bg-white p-6 rounded-3xl border border-gray-100 flex flex-col items-center gap-3 shadow-sm hover:shadow-md transition-all">
                 <div className="bg-orange-50 p-4 rounded-2xl text-orange-600 flex gap-1">
-                    <ArrowUpCircle size={20} />
-                    <ArrowDownCircle size={20} />
+                  <ArrowUpCircle size={20} />
+                  <ArrowDownCircle size={20} />
                 </div>
                 <span className="font-black text-sm uppercase text-[#1A2B3C]">Sangria/Reforço</span>
               </button>
             </div>
 
-            <button 
+            <button
               onClick={() => setIsModalFecharOpen(true)}
               className="w-full mt-6 flex items-center justify-center gap-2 text-gray-400 font-bold p-5 rounded-2xl border-2 border-dashed border-gray-200 text-xs hover:text-red-500 hover:border-red-200 transition-all"
             >
@@ -152,14 +161,14 @@ export default function GerenciarCaixa() {
       </main>
 
       {isModalFecharOpen && CaixaAberto && (
-        <ModalFecharCaixa 
-          caixaId={CaixaAberto.id} 
-          onClose={() => setIsModalFecharOpen(false)} 
+        <ModalFecharCaixa
+          caixaId={CaixaAberto.id}
+          onClose={() => setIsModalFecharOpen(false)}
         />
       )}
 
       {isModalMovimentarOpen && CaixaAberto && (
-        <ModalMovimentacaoCaixa 
+        <ModalMovimentacaoCaixa
           isOpen={isModalMovimentarOpen}
           caixaId={CaixaAberto.id}
           onClose={() => setIsModalMovimentarOpen(false)}
