@@ -4,15 +4,12 @@ import {
   getRelatoriosDashboard,
   getRelatorioLucro,
   getRelatorioFluxo,
-  getFluxoFinanceiroDetalhado, // 👈 ADD
   type ApiResponse,
   type DashboardRelatorios,
   type LucroFinanceiro,
   type FluxoFinanceiro,
-  type FluxoFinanceiroDetalhado, // 👈 ADD
 } from "../services/relatorios";
 
-import { CardFluxoDetalhado } from "../components/relatorios/CardFluxoDetalhado";
 import { CardLucro } from "../components/relatorios";
 import { CardFluxo } from "../components/relatorios/CardFluxo";
 import { GraficoFluxo } from "../components/relatorios/GraficoFluxo";
@@ -33,24 +30,17 @@ export default function Relatorios() {
   const [fluxoResp, setFluxoResp] =
     useState<ApiResponse<FluxoFinanceiro> | null>(null);
 
-  const [fluxoDetalhado, setFluxoDetalhado] =
-    useState<ApiResponse<FluxoFinanceiroDetalhado> | null>(null);
-
   /* ======================
      EFFECT
   ====================== */
   useEffect(() => {
     async function carregar() {
       try {
-        const [dashboardData, lucroData, fluxoData, fluxoDetalhadoData] =
-          await Promise.all([
-            getRelatoriosDashboard(),
-            getRelatorioLucro(),
-            getRelatorioFluxo(),
-            getFluxoFinanceiroDetalhado(),
-          ]);
-
-        setFluxoDetalhado(fluxoDetalhadoData);
+        const [dashboardData, lucroData, fluxoData] = await Promise.all([
+          getRelatoriosDashboard(),
+          getRelatorioLucro(),
+          getRelatorioFluxo(),
+        ]);
 
         setDashboard(dashboardData);
         setLucroResp(lucroData);
@@ -85,8 +75,8 @@ export default function Relatorios() {
     margemPercentual > 0 && margemPercentual < 20
       ? "Você vende bem, mas sua margem está baixa"
       : margemPercentual < 0
-        ? "Você está vendendo com prejuízo"
-        : null;
+      ? "Você está vendendo com prejuízo"
+      : null;
 
   /* ======================
      RENDER
@@ -113,15 +103,6 @@ export default function Relatorios() {
 
           <GraficoFluxo dados={fluxoResp.data.dias} />
         </>
-      )}
-
-      {fluxoDetalhado && (
-        <CardFluxoDetalhado
-          entradas={fluxoDetalhado.data.entradas.vendas}
-          despesas={fluxoDetalhado.data.saidas.despesas}
-          custos={fluxoDetalhado.data.saidas.custosOperacionais}
-          saldo={fluxoDetalhado.data.saldoLiquido}
-        />
       )}
 
       {/* 📊 RESUMO FINANCEIRO */}

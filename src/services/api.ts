@@ -1,33 +1,74 @@
-import axios from 'axios';
+import axios from "axios";
+import type { AxiosError, InternalAxiosRequestConfig } from "axios";
 
-// Prioriza a variável de ambiente do Vite, caso contrário usa o IP local
-const baseURL = import.meta.env.VITE_API_URL || 'http://192.168.0.248:3333';
+const baseURL = import.meta.env.VITE_API_URL || "http://localhost:3333";
 
 export const api = axios.create({
   baseURL,
+  withCredentials: true,
 });
 
-// Interceptor para anexar o Token JWT
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('@centralsys:token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+/**
+ * Separate client WITHOUT interceptors to avoid infinite loops when refreshing.
+ */
+const refreshClient = axios.create({
+  baseURL,
+  withCredentials: true,
+});
+
+type RetriableRequest = InternalAxiosRequestConfig & { _retry?: boolean };
+
+let refreshPromise: Promise<void> | null = null;
+let refreshDisabled = false;
+
+function isAuthEndpoint(url: string | undefined): boolean {
+  if (!url) return false;
+  return (
+    url.includes("/auth/login") ||
+    url.includes("/auth/logout") ||
+    url.includes("/auth/refresh") ||
+    url.includes("/auth/me")
+  );
+}
+
+async function refreshSessionOnce(): Promise<void> {
+  if (refreshDisabled) throw new Error("refresh_disabled");
+  if (!refreshPromise) {
+    refreshPromise = refreshClient
+      .post("/auth/refresh")
+      .then(() => {
+        refreshDisabled = false;
+      })
+      .catch((err) => {
+        refreshDisabled = true; // stop thrashing until explicit login
+        throw err;
+      })
+      .finally(() => {
+        refreshPromise = null;
+      });
   }
-  return config;
-}, (error) => {
-  return Promise.reject(error);
-});
+  await refreshPromise;
+}
 
-// Interceptor de resposta para tratar expiração de sessão
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      console.warn("Sessão expirada ou token inválido.");
-      localStorage.removeItem('@centralsys:token');
-      localStorage.removeItem('@centralsys:user');
+  async (error: AxiosError) => {
+    const status = error.response?.status;
+    const original = error.config as RetriableRequest | undefined;
+
+    // Never refresh on auth endpoints (prevents recursion / infinite loops)
+    if (status !== 401 || !original || original._retry || isAuthEndpoint(original.url)) {
+      return Promise.reject(error);
     }
-    return Promise.reject(error);
+
+    original._retry = true;
+
+    try {
+      await refreshSessionOnce();
+      return api(original);
+    } catch {
+      return Promise.reject(error);
+    }
   }
 );
 
