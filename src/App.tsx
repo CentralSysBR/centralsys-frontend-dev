@@ -11,6 +11,7 @@ import PDV from "./pages/PDV";
 import GerenciarCaixa from "./pages/GerenciarCaixa";
 import Produtos from "./pages/Produtos";
 import Relatorios from "./pages/Relatorios";
+import Despesas from "./pages/Despesas";
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { usuario, loading } = useAuth();
@@ -75,6 +76,15 @@ export default function App() {
               </PrivateRoute>
             }
           />
+          <Route
+            path="/despesas"
+            element={
+              <PrivateRoute>
+                <Despesas />
+              </PrivateRoute>
+            }
+          />
+
           <Route
             path="/relatorios"
             element={

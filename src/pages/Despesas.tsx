@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Plus, XCircle } from "lucide-react";
 import { api } from "../services/api";
 import { ModalNovaDespesa } from "../components/ModalNovaDespesa";
@@ -16,6 +16,12 @@ export default function Despesas() {
   const [despesas, setDespesas] = useState<Despesa[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalAberto, setModalAberto] = useState(false);
+  const [mostrarCanceladas, setMostrarCanceladas] = useState(false);
+
+  const despesasVisiveis = useMemo(() => {
+    if (mostrarCanceladas) return despesas;
+    return despesas.filter((x) => x.status !== "CANCELADA");
+  }, [despesas, mostrarCanceladas]);
 
   async function carregarDespesas() {
     try {
@@ -52,6 +58,15 @@ export default function Despesas() {
           Despesas
         </h1>
 
+        <label className="flex items-center gap-2 text-sm text-gray-700 select-none">
+          <input
+            type="checkbox"
+            checked={mostrarCanceladas}
+            onChange={(e) => setMostrarCanceladas(e.target.checked)}
+          />
+          Mostrar canceladas
+        </label>
+
         <button
           onClick={() => setModalAberto(true)}
           className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-xl font-bold text-sm"
@@ -82,7 +97,7 @@ export default function Despesas() {
               </tr>
             )}
 
-            {!loading && despesas.length === 0 && (
+            {!loading && despesasVisiveis.length === 0 && (
               <tr>
                 <td colSpan={6} className="p-6 text-center text-gray-400">
                   Nenhuma despesa registrada
@@ -90,7 +105,7 @@ export default function Despesas() {
               </tr>
             )}
 
-            {despesas.map((despesa) => (
+            {despesasVisiveis.map((despesa) => (
               <tr key={despesa.id} className="border-t">
                 <td className="p-4 font-medium">{despesa.descricao}</td>
                 <td className="p-4 text-center font-bold text-red-600">
