@@ -118,7 +118,7 @@ export default function Relatorios() {
         <ul>
           {topProdutos.map((p, i) => (
             <li key={i}>
-              {p.nome} — R$ {p.totalFaturado}
+              {p.nome} — R$ {p.totalFaturadoCentavos}
             </li>
           ))}
         </ul>

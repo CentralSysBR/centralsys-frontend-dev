@@ -26,8 +26,8 @@ export interface Produto {
   categoria: string;
   codigoBarras?: string;
   imagemUrl?: string;
-  precoVenda: number;
-  precoCusto?: number;
+  precoVendaCentavos: number;
+  precoCustoCentavos?: number;
   quantidadeEstoque: number;
 }
 

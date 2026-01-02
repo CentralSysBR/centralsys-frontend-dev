@@ -1,0 +1,433 @@
+diff --git a/src/utils/formatCurrencyBR.ts b/src/utils/formatCurrencyBR.ts
+--- a/src/utils/formatCurrencyBR.ts
++++ b/src/utils/formatCurrencyBR.ts
+@@ -1,14 +1,11 @@
+-export function formatCurrencyBR(value: number | string): string {
+-  const numericValue =
+-    typeof value === 'string'
+-      ? Number(value.replace(/[^\d.-]/g, ''))
+-      : value;
+-
+-  if (isNaN(numericValue)) return 'R$ 0,00';
+-
+-  return numericValue.toLocaleString('pt-BR', {
+-    style: 'currency',
+-    currency: 'BRL',
++/**
++ * Formata um valor inteiro em centavos para "R$ 0,00".
++ */
++export function formatCurrencyBR(valueCentavos: number | null | undefined): string {
++  const centavos = typeof valueCentavos === "number" && Number.isFinite(valueCentavos) ? valueCentavos : 0;
++  return (centavos / 100).toLocaleString("pt-BR", {
++    style: "currency",
++    currency: "BRL",
+     minimumFractionDigits: 2,
+   });
+-}+}
+diff --git a/src/utils/parseCurrencyBR.ts b/src/utils/parseCurrencyBR.ts
+--- a/src/utils/parseCurrencyBR.ts
++++ b/src/utils/parseCurrencyBR.ts
+@@ -1,11 +1,17 @@
++/**
++ * Converte input textual (pt-BR) em inteiro (centavos).
++ */
+ export function parseCurrencyBR(value: string): number {
+   if (!value) return 0;
+ 
+-  return Number(
+-    value
+-      .replace(/\s/g, '')
+-      .replace('R$', '')
+-      .replace(/\./g, '')
+-      .replace(',', '.')
+-  );
++  const clean = value
++    .replace(/\s/g, "")
++    .replace("R$", "")
++    .replace(/\./g, "")
++    .replace(",", ".");
++
++  const asNumber = Number(clean);
++  if (!Number.isFinite(asNumber)) return 0;
++
++  return Math.round(asNumber * 100);
+ }
+diff --git a/src/services/produtos.ts b/src/services/produtos.ts
+--- a/src/services/produtos.ts
++++ b/src/services/produtos.ts
+@@ -26,8 +26,8 @@
+   categoria: string;
+   codigoBarras?: string;
+   imagemUrl?: string;
+-  precoVenda: number;
+-  precoCusto?: number;
++  precoVendaCentavos: number;
++  precoCustoCentavos?: number;
+   quantidadeEstoque: number;
+ }
+ 
+diff --git a/src/services/vendas.ts b/src/services/vendas.ts
+--- a/src/services/vendas.ts
++++ b/src/services/vendas.ts
+@@ -7,8 +7,8 @@
+ export interface VendaItem {
+   id: string;
+   quantidade: number;
+-  precoUnitario: number;
+-  precoTotal: number;
++  precoUnitarioCentavos: number;
++  precoTotalCentavos: number;
+   produto: {
+     nome: string;
+   };
+@@ -17,7 +17,7 @@
+ export interface Venda {
+   id: string;
+   criadoEm: string;
+-  valorTotal: number;
++  valorTotalCentavos: number;
+   metodoPagamento: string;
+ 
+   usuario: {
+diff --git a/src/services/relatorios.ts b/src/services/relatorios.ts
+--- a/src/services/relatorios.ts
++++ b/src/services/relatorios.ts
+@@ -54,21 +54,21 @@
+   financeiro: {
+     faturamentoTotal: number;
+     totalVendas: number;
+-    ticketMedio: number;
++    ticketMedioCentavos: number;
+     porMetodo: {
+       metodo: string;
+-      valor: number;
++      valorCentavos: number;
+     }[];
+   };
+   topProdutos: {
+     nome: string;
+     quantidade: number;
+-    totalFaturado: number;
++    totalFaturadoCentavos: number;
+   }[];
+   estoque: {
+     totalItens: number;
+     alertaEstoqueBaixo: number;
+-    valorTotalEstoque: number;
++    valorTotalEstoqueCentavos: number;
+     itensCriticos: {
+       nome: string;
+       qtd: number;
+diff --git a/src/pages/Produtos.tsx b/src/pages/Produtos.tsx
+--- a/src/pages/Produtos.tsx
++++ b/src/pages/Produtos.tsx
+@@ -22,8 +22,8 @@
+   id: string;
+   nome: string;
+   categoria: string;
+-  precoVenda: number;
+-  precoCusto?: number;
++  precoVendaCentavos: number;
++  precoCustoCentavos?: number;
+   quantidadeEstoque: number;
+   codigoBarras?: string;
+   imagemUrl?: string;
+@@ -69,8 +69,8 @@
+     categoria: 'Geral',
+     codigoBarras: '',
+     imagemUrl: '',
+-    precoVenda: 0,
+-    precoCusto: 0,
++    precoVendaCentavos: 0,
++    precoCustoCentavos: 0,
+     quantidadeEstoque: 0
+   });
+ 
+@@ -142,8 +142,8 @@
+           categoria: gtin.categoria ?? 'Geral',
+           codigoBarras: gtin.codigoBarras ?? codigo,
+           imagemUrl: gtin.imagemUrl ?? '',
+-          precoVenda: 0,
+-          precoCusto: 0,
++          precoVendaCentavos: 0,
++          precoCustoCentavos: 0,
+           quantidadeEstoque: 0
+         });
+ 
+@@ -178,7 +178,7 @@
+ 
+       setFormNovo(prev => ({
+         ...prev,
+-        precoCusto: custo
++        precoCustoCentavos: custo
+       }));
+ 
+       // Sincroniza input mascarado
+@@ -188,8 +188,8 @@
+ 
+   function abrirEntrada(produto: Produto) {
+     setProdutoSelecionado(produto);
+-    setNovoPrecoVenda(Number(produto.precoVenda));
+-    setNovoPrecoVendaInput(formatCurrencyBR(produto.precoVenda));
++    setNovoPrecoVenda(Number(produto.precoVendaCentavos));
++    setNovoPrecoVendaInput(formatCurrencyBR(produto.precoVendaCentavos));
+     setQtdEntrada(0);
+     setIsModalEntradaOpen(true);
+   }
+@@ -211,7 +211,7 @@
+   }
+ 
+   async function salvarNovoProduto() {
+-    if (!formNovo.nome || formNovo.precoVenda <= 0) {
++    if (!formNovo.nome || formNovo.precoVendaCentavos <= 0) {
+       alert('Nome e Preço de Venda são obrigatórios.');
+       return;
+     }
+@@ -240,7 +240,7 @@
+   const podeSalvarEntrada =
+     produtoSelecionado &&
+     (qtdEntrada > 0 ||
+-      novoPrecoVenda !== Number(produtoSelecionado.precoVenda));
++      novoPrecoVenda !== Number(produtoSelecionado.precoVendaCentavos));
+ 
+   return (
+     <div className="min-h-screen bg-[#F8FAFC] pb-20">
+@@ -321,7 +321,7 @@
+                 <ProductCard
+                   id={produto.id}
+                   nome={produto.nome}
+-                  precoVenda={produto.precoVenda}
++                  precoVendaCentavos={produto.precoVendaCentavos}
+                   quantidadeEstoque={produto.quantidadeEstoque}
+                   imagemUrl={produto.imagemUrl}
+                   mode="estoque"
+@@ -511,7 +511,7 @@
+                         setPrecoCustoInput(masked);
+                         setFormNovo({
+                           ...formNovo,
+-                          precoCusto: parseCurrencyBR(masked),
++                          precoCustoCentavos: parseCurrencyBR(masked),
+                         });
+                       }}
+                     />
+@@ -524,7 +524,7 @@
+ 
+                   <span className="text-gray-400 italic">Custo por unidade:</span>
+ 
+-                  <span className="font-bold text-blue-600">{formatCurrencyBR(formNovo.precoCusto)}</span>
++                  <span className="font-bold text-blue-600">{formatCurrencyBR(formNovo.precoCustoCentavos)}</span>
+ 
+                 </div>
+ 
+@@ -549,7 +549,7 @@
+                       setPrecoVendaInput(masked);
+                       setFormNovo({
+                         ...formNovo,
+-                        precoVenda: parseCurrencyBR(masked),
++                        precoVendaCentavos: parseCurrencyBR(masked),
+                       });
+                     }}
+                   />
+diff --git a/src/pages/PDV.tsx b/src/pages/PDV.tsx
+--- a/src/pages/PDV.tsx
++++ b/src/pages/PDV.tsx
+@@ -15,7 +15,7 @@
+   id: string;
+   nome: string;
+   categoria: string;
+-  precoVenda: number;
++  precoVendaCentavos: number;
+   quantidadeEstoque: number;
+   codigoBarras?: string;
+   imagemUrl?: string;
+@@ -74,7 +74,7 @@
+   
+ 
+   const categorias = ['Todos', ...new Set(produtos.map(p => p.categoria))];
+-  const totalVenda = carrinho.reduce((sum, item) => sum + (Number(item.precoVenda) * item.quantidade), 0);
++  const totalVenda = carrinho.reduce((sum, item) => sum + (Number(item.precoVendaCentavos) * item.quantidade), 0);
+   const totalItens = carrinho.reduce((a, b) => a + b.quantidade, 0);
+   function handleBarcodeScanned(codigo: string) {
+     const produto = produtos.find(p => p.codigoBarras === codigo);
+@@ -263,7 +263,7 @@
+                   <ProductCard
+                     id={produto.id}
+                     nome={produto.nome}
+-                    precoVenda={produto.precoVenda}
++                    precoVendaCentavos={produto.precoVendaCentavos}
+                     quantidadeEstoque={produto.quantidadeEstoque}
+                     imagemUrl={produto.imagemUrl}
+                     quantidadeNoCarrinho={qtd}
+diff --git a/src/pages/Vendas.tsx b/src/pages/Vendas.tsx
+--- a/src/pages/Vendas.tsx
++++ b/src/pages/Vendas.tsx
+@@ -75,7 +75,7 @@
+               <td className="p-2">{venda.metodoPagamento}</td>
+ 
+               <td className="p-2 font-semibold">
+-                {formatCurrencyBR(venda.valorTotal)}
++                {formatCurrencyBR(venda.valorTotalCentavos)}
+               </td>
+             </tr>
+           ))}
+diff --git a/src/pages/DashboardVendas.tsx b/src/pages/DashboardVendas.tsx
+--- a/src/pages/DashboardVendas.tsx
++++ b/src/pages/DashboardVendas.tsx
+@@ -15,7 +15,7 @@
+ 
+ interface Venda {
+   id: string;
+-  valorTotal: number;
++  valorTotalCentavos: number;
+   metodoPagamento: string;
+   criadoEm: string;
+   usuario: { nome: string };
+@@ -46,7 +46,7 @@
+     carregarVendas();
+   }, []);
+ 
+-  const totalGeral = vendas.reduce((acc, v) => acc + Number(v.valorTotal), 0);
++  const totalGeral = vendas.reduce((acc, v) => acc + Number(v.valorTotalCentavos), 0);
+ 
+   return (
+     <div className="min-h-screen bg-gray-50 pb-20">
+@@ -93,7 +93,7 @@
+                   <div className="space-y-1">
+                     <div className="flex items-center gap-2">
+                       <span className="font-black text-lg text-gray-900">
+-                        {formatCurrencyBR(venda.valorTotal)}
++                        {formatCurrencyBR(venda.valorTotalCentavos)}
+                       </span>
+                       <span className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase bg-gray-100 text-gray-600">
+                         {venda.metodoPagamento}
+diff --git a/src/pages/GerenciarCaixa.tsx b/src/pages/GerenciarCaixa.tsx
+--- a/src/pages/GerenciarCaixa.tsx
++++ b/src/pages/GerenciarCaixa.tsx
+@@ -12,8 +12,8 @@
+ interface Caixa {
+   id: string;
+   status: 'ABERTO' | 'FECHADO';
+-  valorInicial: number;
+-  valorAtual?: number;
++  valorInicialCentavos: number;
++  valorAtualCentavos?: number;
+   abertoEm: string;
+ }
+ 
+@@ -21,7 +21,7 @@
+   const navigate = useNavigate();
+   const [CaixaAberto, setCaixaAberto] = useState<Caixa | null>(null);
+   const [loading, setLoading] = useState(true);
+-  const [valorInicial, setValorInicial] = useState(formatCurrencyBR(0)); const [isModalFecharOpen, setIsModalFecharOpen] = useState(false);
++  const [valorInicialCentavos, setValorInicial] = useState(formatCurrencyBR(0)); const [isModalFecharOpen, setIsModalFecharOpen] = useState(false);
+   const [isModalMovimentarOpen, setIsModalMovimentarOpen] = useState(false);
+   const [isFinalizando, setIsFinalizando] = useState(false);
+ 
+@@ -42,7 +42,7 @@
+   }
+ 
+   async function handleAbrirCaixa() {
+-    const valor = parseCurrencyBR(valorInicial);
++    const valor = parseCurrencyBR(valorInicialCentavos);
+ 
+     if (isNaN(valor) || valor < 0) {
+       alert("Informe um valor inicial válido.");
+@@ -51,7 +51,7 @@
+ 
+     try {
+       setIsFinalizando(true);
+-      await api.post('/caixas/abrir', { valorInicial: valor });
++      await api.post('/caixas/abrir', { valorInicialCentavos: valor });
+       await fetchCaixaStatus();
+     } catch (error: any) {
+       alert(error.response?.data?.message || "Erro ao abrir caixa");
+@@ -94,7 +94,7 @@
+                 inputMode="numeric"
+                 placeholder="R$ 0,00"
+                 className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl p-4 text-center text-2xl font-black text-[#1A2B3C] outline-none focus:border-blue-500 transition-all"
+-                value={valorInicial}
++                value={valorInicialCentavos}
+                 onChange={(e) => {
+                   const masked = maskCurrencyInputBR(e.target.value);
+                   setValorInicial(masked);
+@@ -122,13 +122,13 @@
+ 
+                 <p className="text-white/50 text-[10px] font-black uppercase mb-1">Saldo Atual em Dinheiro</p>
+                 <h2 className="text-5xl font-black mb-4 tracking-tighter">
+-                  {formatCurrencyBR(CaixaAberto.valorAtual ?? CaixaAberto.valorInicial)}
++                  {formatCurrencyBR(CaixaAberto.valorAtualCentavos ?? CaixaAberto.valorInicialCentavos)}
+                 </h2>
+ 
+                 <div className="flex items-center gap-2 text-white/40">
+                   <Wallet size={14} />
+                   <p className="text-[11px] font-bold uppercase">
+-                    Fundo Inicial: <span className="text-white/70">{formatCurrencyBR(CaixaAberto.valorInicial)}</span>
++                    Fundo Inicial: <span className="text-white/70">{formatCurrencyBR(CaixaAberto.valorInicialCentavos)}</span>
+                   </p>
+                 </div>
+               </div>
+diff --git a/src/pages/Despesas.tsx b/src/pages/Despesas.tsx
+--- a/src/pages/Despesas.tsx
++++ b/src/pages/Despesas.tsx
+@@ -6,7 +6,7 @@
+ interface Despesa {
+   id: string;
+   descricao: string;
+-  valor: number;
++  valorCentavos: number;
+   formaPagamento: string;
+   status: string;
+   dataDespesa: string;
+@@ -109,7 +109,7 @@
+               <tr key={despesa.id} className="border-t">
+                 <td className="p-4 font-medium">{despesa.descricao}</td>
+                 <td className="p-4 text-center font-bold text-red-600">
+-                  R$ {despesa.valor.toFixed(2)}
++                  R$ {despesa.valorCentavos.toFixed(2)}
+                 </td>
+                 <td className="p-4 text-center">
+                   {despesa.formaPagamento}
+diff --git a/src/components/ModalFinalizarVenda.tsx b/src/components/ModalFinalizarVenda.tsx
+--- a/src/components/ModalFinalizarVenda.tsx
++++ b/src/components/ModalFinalizarVenda.tsx
+@@ -10,7 +10,7 @@
+ interface ItemCarrinho {
+   id: string;
+   nome: string;
+-  precoVenda: number;
++  precoVendaCentavos: number;
+   quantidade: number;
+ }
+ 
+@@ -63,7 +63,7 @@
+               {carrinho.map(item => (
+                 <div key={item.id} className="flex justify-between text-sm items-center bg-gray-50 p-3 rounded-xl">
+                   <span className="text-gray-600 font-medium">{item.quantidade}x {item.nome}</span>
+-                  <span className="font-bold text-[#1A2B3C]">{formatCurrencyBR(item.precoVenda * item.quantidade)}</span>
++                  <span className="font-bold text-[#1A2B3C]">{formatCurrencyBR(item.precoVendaCentavos * item.quantidade)}</span>
+                 </div>
+               ))}
+             </div>
+diff --git a/src/components/ModalFecharCaixa.tsx b/src/components/ModalFecharCaixa.tsx
+--- a/src/components/ModalFecharCaixa.tsx
++++ b/src/components/ModalFecharCaixa.tsx
+@@ -6,8 +6,8 @@
+ 
+ interface ResumoFechamento {
+   caixa: {
+-    valorInicial: number;
+-    valorFinal: number;
++    valorInicialCentavos: number;
++    valorFinalCentavos: number;
+   };
+   resumo: {
+     DINHEIRO: number;
+@@ -93,7 +93,7 @@
+ 
+             <div className="bg-gray-900 p-6 rounded-[32px] text-center shadow-xl">
+               <p className="text-white/40 text-[10px] font-black uppercase tracking-widest">Saldo Final Esperado</p>
+-              <p className="text-white text-4xl font-black">{formatCurrencyBR(resultado.caixa.valorFinal)}</p>
++              <p className="text-white text-4xl font-black">{formatCurrencyBR(resultado.caixa.valorFinalCentavos)}</p>
+             </div>
+ 
+             <button

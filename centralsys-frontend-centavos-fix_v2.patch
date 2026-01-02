@@ -1,0 +1,73 @@
+diff --git a/src/components/ProductCard.tsx b/src/components/ProductCard.tsx
+--- a/src/components/ProductCard.tsx
++++ b/src/components/ProductCard.tsx
+@@
+-interface ProductCardProps {
+-    id: string;
+-    nome: string;
+-    precoVenda: number;
+-    quantidadeEstoque: number;
+-    imagemUrl?: string;
+-    quantidadeNoCarrinho?: number;
++interface ProductCardProps {
++    id: string;
++    nome: string;
++    precoVendaCentavos: number;
++    quantidadeEstoque: number;
++    imagemUrl?: string;
++    quantidadeNoCarrinho?: number;
+@@
+-export function ProductCard({
+-    nome,
+-    precoVenda,
+-    quantidadeEstoque,
+-    imagemUrl,
+-    quantidadeNoCarrinho = 0,
++export function ProductCard({
++    nome,
++    precoVendaCentavos,
++    quantidadeEstoque,
++    imagemUrl,
++    quantidadeNoCarrinho = 0,
+@@
+-        {formatCurrencyBR(precoVenda)}
++        {formatCurrencyBR(precoVendaCentavos)}
+
+diff --git a/src/pages/VendaDetalhe.tsx b/src/pages/VendaDetalhe.tsx
+--- a/src/pages/VendaDetalhe.tsx
++++ b/src/pages/VendaDetalhe.tsx
+@@
+-            {formatCurrencyBR(venda.valorTotal)}
++            {formatCurrencyBR(venda.valorTotalCentavos)}
+@@
+-                  {formatCurrencyBR(item.precoUnitario)}
++                  {formatCurrencyBR(item.precoUnitarioCentavos)}
+@@
+-                  {formatCurrencyBR(item.precoTotal)}
++                  {formatCurrencyBR(item.precoTotalCentavos)}
+
+diff --git a/src/components/ReciboVenda.tsx b/src/components/ReciboVenda.tsx
+--- a/src/components/ReciboVenda.tsx
++++ b/src/components/ReciboVenda.tsx
+@@
+-interface ItemRecibo {
+-  id: string;
+-  nome: string;
+-  quantidade: number;
+-  precoVenda: number;
++interface ItemRecibo {
++  id: string;
++  nome: string;
++  quantidade: number;
++  precoVendaCentavos?: number;
++  precoVenda?: number;
+@@
+-                <span>{formatCurrencyBR(item.quantidade * item.precoVenda)}</span>
++                {(() => {
++                  const precoCentavos = item.precoVendaCentavos ?? item.precoVenda ?? 0;
++                  const total = item.quantidade * precoCentavos;
++                  return <span>{formatCurrencyBR(total)}</span>;
++                })()}
+@@
+-              <span className="text-[9px] text-gray-400">UN: {formatCurrencyBR(item.precoVenda)}</span>
++              <span className="text-[9px] text-gray-400">UN: {formatCurrencyBR(item.precoVendaCentavos ?? item.precoVenda ?? 0)}</span>

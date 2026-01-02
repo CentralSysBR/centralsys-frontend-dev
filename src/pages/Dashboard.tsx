@@ -48,7 +48,7 @@ export default function Dashboard() {
     { title: 'Produtos', icon: <Package size={24} />, color: 'bg-blue-600', path: '/produtos' },
     { title: 'Caixa', icon: <Calculator size={24} />, color: 'bg-orange-600', path: '/caixa' },
     { title: 'Despesas', icon: <AlertCircle size={24} />, color: 'bg-red-600', path: '/despesas' },
-    { title: 'Relatórios', icon: <LayoutDashboard size={24} />, color: 'bg-purple-600', path: '/relatorios' }, // Removido emBreve
+    // { title: 'Relatórios', icon: <LayoutDashboard size={24} />, color: 'bg-purple-600', path: '/relatorios' }, // Removido emBreve
   ];
 
   return (

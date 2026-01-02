@@ -75,7 +75,7 @@ export default function Vendas() {
               <td className="p-2">{venda.metodoPagamento}</td>
 
               <td className="p-2 font-semibold">
-                {formatCurrencyBR(venda.valorTotal)}
+                {formatCurrencyBR(venda.valorTotalCentavos)}
               </td>
             </tr>
           ))}

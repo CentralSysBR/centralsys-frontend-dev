@@ -6,7 +6,8 @@ interface ItemRecibo {
   id: string;
   nome: string;
   quantidade: number;
-  precoVenda: number;
+  precoVendaCentavos?: number;
+  precoVenda?: number;
 }
 
 interface ReciboVendaProps {
@@ -77,16 +78,18 @@ export function ReciboVenda({
             <span>Item</span>
             <span>Total</span>
           </div>
-          {itens.map((item, index) => (
-            <div key={index} className="flex flex-col text-[11px]">
-              <div className="flex justify-between">
-                <span>{item.quantidade}x {item.nome}</span>
-                <span>{formatCurrencyBR(item.quantidade * item.precoVenda)}</span>
-
+          {itens.map((item, index) => {
+            const precoCentavos = item.precoVendaCentavos ?? item.precoVenda ?? 0;
+            return (
+              <div key={index} className="flex flex-col text-[11px]">
+                <div className="flex justify-between">
+                  <span>{item.quantidade}x {item.nome}</span>
+                  <span>{formatCurrencyBR(item.quantidade * precoCentavos)}</span>
+                </div>
+                <span className="text-[9px] text-gray-400">UN: {formatCurrencyBR(precoCentavos)}</span>
               </div>
-              <span className="text-[9px] text-gray-400">UN: {formatCurrencyBR(item.precoVenda)}</span>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <div className="border-t-2 border-dashed border-gray-200 pt-4 space-y-1">

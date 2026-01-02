@@ -22,8 +22,8 @@ interface Produto {
   id: string;
   nome: string;
   categoria: string;
-  precoVenda: number;
-  precoCusto?: number;
+  precoVendaCentavos: number;
+  precoCustoCentavos?: number;
   quantidadeEstoque: number;
   codigoBarras?: string;
   imagemUrl?: string;
@@ -69,8 +69,8 @@ export default function Produtos() {
     categoria: 'Geral',
     codigoBarras: '',
     imagemUrl: '',
-    precoVenda: 0,
-    precoCusto: 0,
+    precoVendaCentavos: 0,
+    precoCustoCentavos: 0,
     quantidadeEstoque: 0
   });
 
@@ -142,8 +142,8 @@ export default function Produtos() {
           categoria: gtin.categoria ?? 'Geral',
           codigoBarras: gtin.codigoBarras ?? codigo,
           imagemUrl: gtin.imagemUrl ?? '',
-          precoVenda: 0,
-          precoCusto: 0,
+          precoVendaCentavos: 0,
+          precoCustoCentavos: 0,
           quantidadeEstoque: 0
         });
 
@@ -178,7 +178,7 @@ export default function Produtos() {
 
       setFormNovo(prev => ({
         ...prev,
-        precoCusto: custo
+        precoCustoCentavos: custo
       }));
 
       // Sincroniza input mascarado
@@ -188,8 +188,8 @@ export default function Produtos() {
 
   function abrirEntrada(produto: Produto) {
     setProdutoSelecionado(produto);
-    setNovoPrecoVenda(Number(produto.precoVenda));
-    setNovoPrecoVendaInput(formatCurrencyBR(produto.precoVenda));
+    setNovoPrecoVenda(Number(produto.precoVendaCentavos));
+    setNovoPrecoVendaInput(formatCurrencyBR(produto.precoVendaCentavos));
     setQtdEntrada(0);
     setIsModalEntradaOpen(true);
   }
@@ -211,7 +211,7 @@ export default function Produtos() {
   }
 
   async function salvarNovoProduto() {
-    if (!formNovo.nome || formNovo.precoVenda <= 0) {
+    if (!formNovo.nome || formNovo.precoVendaCentavos <= 0) {
       alert('Nome e Preço de Venda são obrigatórios.');
       return;
     }
@@ -240,7 +240,7 @@ export default function Produtos() {
   const podeSalvarEntrada =
     produtoSelecionado &&
     (qtdEntrada > 0 ||
-      novoPrecoVenda !== Number(produtoSelecionado.precoVenda));
+      novoPrecoVenda !== Number(produtoSelecionado.precoVendaCentavos));
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-20">
@@ -321,7 +321,7 @@ export default function Produtos() {
                 <ProductCard
                   id={produto.id}
                   nome={produto.nome}
-                  precoVenda={produto.precoVenda}
+                  precoVendaCentavos={produto.precoVendaCentavos}
                   quantidadeEstoque={produto.quantidadeEstoque}
                   imagemUrl={produto.imagemUrl}
                   mode="estoque"
@@ -511,7 +511,7 @@ export default function Produtos() {
                         setPrecoCustoInput(masked);
                         setFormNovo({
                           ...formNovo,
-                          precoCusto: parseCurrencyBR(masked),
+                          precoCustoCentavos: parseCurrencyBR(masked),
                         });
                       }}
                     />
@@ -524,7 +524,7 @@ export default function Produtos() {
 
                   <span className="text-gray-400 italic">Custo por unidade:</span>
 
-                  <span className="font-bold text-blue-600">{formatCurrencyBR(formNovo.precoCusto)}</span>
+                  <span className="font-bold text-blue-600">{formatCurrencyBR(formNovo.precoCustoCentavos)}</span>
 
                 </div>
 
@@ -549,7 +549,7 @@ export default function Produtos() {
                       setPrecoVendaInput(masked);
                       setFormNovo({
                         ...formNovo,
-                        precoVenda: parseCurrencyBR(masked),
+                        precoVendaCentavos: parseCurrencyBR(masked),
                       });
                     }}
                   />

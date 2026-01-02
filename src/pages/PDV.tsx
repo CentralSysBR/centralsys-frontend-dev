@@ -15,7 +15,7 @@ interface Produto {
   id: string;
   nome: string;
   categoria: string;
-  precoVenda: number;
+  precoVendaCentavos: number;
   quantidadeEstoque: number;
   codigoBarras?: string;
   imagemUrl?: string;
@@ -53,15 +53,18 @@ export default function PDV() {
         setLoading(true);
         // Busca produtos e status do caixa simultaneamente
         const [resProdutos, resCaixa] = await Promise.all([
-          api.get('/produtos'),
-          api.get('/caixas') // Usando a rota base para filtrar o aberto
-        ]);
+  api.get('/produtos'),
+  api.get('/caixas/aberto'),
+]);
 
-        setProdutos(resProdutos.data.data || []);
+setProdutos(resProdutos.data.data || []);
 
-        const caixas = resCaixa.data.data || [];
-        const caixaAberto = caixas.find((c: any) => c.status === 'ABERTO');
-        if (caixaAberto) setCaixaId(caixaAberto.id);
+const caixaAberto = resCaixa.data.data; // objeto ou null
+if (caixaAberto && caixaAberto.status === 'ABERTO') {
+  setCaixaId(caixaAberto.id);
+} else {
+  setCaixaId(null);
+}
 
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
@@ -74,7 +77,7 @@ export default function PDV() {
   
 
   const categorias = ['Todos', ...new Set(produtos.map(p => p.categoria))];
-  const totalVenda = carrinho.reduce((sum, item) => sum + (Number(item.precoVenda) * item.quantidade), 0);
+  const totalVenda = carrinho.reduce((sum, item) => sum + (Number(item.precoVendaCentavos) * item.quantidade), 0);
   const totalItens = carrinho.reduce((a, b) => a + b.quantidade, 0);
   function handleBarcodeScanned(codigo: string) {
     const produto = produtos.find(p => p.codigoBarras === codigo);
@@ -263,7 +266,7 @@ export default function PDV() {
                   <ProductCard
                     id={produto.id}
                     nome={produto.nome}
-                    precoVenda={produto.precoVenda}
+                    precoVendaCentavos={produto.precoVendaCentavos}
                     quantidadeEstoque={produto.quantidadeEstoque}
                     imagemUrl={produto.imagemUrl}
                     quantidadeNoCarrinho={qtd}

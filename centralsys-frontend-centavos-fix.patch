@@ -1,0 +1,61 @@
+diff --git a/src/components/ProductCard.tsx b/src/components/ProductCard.tsx
+index 1111111..2222222 100644
+--- a/src/components/ProductCard.tsx
++++ b/src/components/ProductCard.tsx
+@@
+ interface ProductCardProps {
+   id: string;
+   nome: string;
+-  precoVenda: number;
++  precoVendaCentavos: number;
+   quantidadeEstoque: number;
+   imagemUrl?: string;
+   quantidadeNoCarrinho?: number;
+@@
+ export function ProductCard({
+   nome,
+-  precoVenda,
++  precoVendaCentavos,
+   quantidadeEstoque,
+   imagemUrl,
+   quantidadeNoCarrinho = 0,
+@@
+-        {formatCurrencyBR(precoVenda)}
++        {formatCurrencyBR(precoVendaCentavos)}
+   </span>
+
+diff --git a/src/pages/VendaDetalhe.tsx b/src/pages/VendaDetalhe.tsx
+index 3333333..4444444 100644
+--- a/src/pages/VendaDetalhe.tsx
++++ b/src/pages/VendaDetalhe.tsx
+@@
+- {formatCurrencyBR(venda.valorTotal)}
++ {formatCurrencyBR(venda.valorTotalCentavos)}
+@@
+- {formatCurrencyBR(item.precoUnitario)}
++ {formatCurrencyBR(item.precoUnitarioCentavos)}
+@@
+- {formatCurrencyBR(item.precoTotal)}
++ {formatCurrencyBR(item.precoTotalCentavos)}
+
+diff --git a/src/components/ReciboVenda.tsx b/src/components/ReciboVenda.tsx
+index 5555555..6666666 100644
+--- a/src/components/ReciboVenda.tsx
++++ b/src/components/ReciboVenda.tsx
+@@
+ interface ItemRecibo {
+   id: string;
+   nome: string;
+   quantidade: number;
+-  precoVenda: number;
++  precoVendaCentavos?: number;
++  precoVenda?: number;
+ }
+@@
+- {formatCurrencyBR(item.quantidade * item.precoVenda)}
++ const precoCentavos = item.precoVendaCentavos ?? item.precoVenda ?? 0;
++ const total = item.quantidade * precoCentavos;
++ {formatCurrencyBR(total)}
+@@
+- UN: {formatCurrencyBR(item.precoVenda)}
++ UN: {formatCurrencyBR(precoCentavos)}

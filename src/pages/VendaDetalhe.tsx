@@ -44,7 +44,7 @@ export default function VendaDetalhe() {
         <p><strong>Vendedor:</strong> {venda.usuario.nome}</p>
         <p><strong>Pagamento:</strong> {venda.metodoPagamento}</p>
         <p className="font-semibold">
-          Total: Total: {formatCurrencyBR(venda.valorTotal)}
+          Total: {formatCurrencyBR(venda.valorTotalCentavos)}
         </p>
       </section>
 
@@ -66,10 +66,10 @@ export default function VendaDetalhe() {
                 <td className="p-2">{item.produto.nome}</td>
                 <td className="p-2 text-right">{item.quantidade}</td>
                 <td className="p-2 text-right">
-                  {formatCurrencyBR(item.precoUnitario)}
+                  {formatCurrencyBR(item.precoUnitarioCentavos)}
                 </td>
                 <td className="p-2 text-right font-semibold">
-                  {formatCurrencyBR(item.precoTotal)}
+                  {formatCurrencyBR(item.precoTotalCentavos)}
                 </td>
               </tr>
             ))}

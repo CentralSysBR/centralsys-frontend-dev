@@ -15,7 +15,7 @@ import { formatCurrencyBR } from '../utils/formatCurrencyBR';
 
 interface Venda {
   id: string;
-  valorTotal: number;
+  valorTotalCentavos: number;
   metodoPagamento: string;
   criadoEm: string;
   usuario: { nome: string };
@@ -46,7 +46,7 @@ export default function DashboardVendas() {
     carregarVendas();
   }, []);
 
-  const totalGeral = vendas.reduce((acc, v) => acc + Number(v.valorTotal), 0);
+  const totalGeral = vendas.reduce((acc, v) => acc + Number(v.valorTotalCentavos), 0);
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
@@ -93,7 +93,7 @@ export default function DashboardVendas() {
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <span className="font-black text-lg text-gray-900">
-                        {formatCurrencyBR(venda.valorTotal)}
+                        {formatCurrencyBR(venda.valorTotalCentavos)}
                       </span>
                       <span className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase bg-gray-100 text-gray-600">
                         {venda.metodoPagamento}
