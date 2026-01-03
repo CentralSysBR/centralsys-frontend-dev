@@ -234,7 +234,7 @@ export default function DashboardAdmin() {
           {/* Área de título (abaixo da barra de navegação, acima dos cards) */}
           <div className="mb-6 flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <h1 className="text-xl lg:text-2xl font-black text-[#1A2B3C] truncate">{empresaNome}</h1>
+              <h1 className="nome-da-empresa text-xl lg:text-2xl font-bold text-[#1A2B3C] truncate">{empresaNome}</h1>
               <p className="text-xs text-gray-500 mt-1">{now.toLocaleString("pt-BR")}</p>
             </div>
 
@@ -274,28 +274,28 @@ export default function DashboardAdmin() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               <section className="bg-white border rounded-2xl p-4 shadow-sm">
                 <div className="flex items-center justify-between">
-                  <div className="text-xs font-semibold text-gray-500">Lucro de hoje</div>
+                  <div className="text-m font-semibold text-gray-500">Quanto eu Ganhei hoje?</div>
                   <button onClick={() => navigate("/historico-vendas")} className="text-xs font-semibold text-[#1A2B3C] underline">
-                    Ver Histórico
+                    Ver Extrato
                   </button>
                 </div>
                 <div className="mt-2 text-3xl font-black text-[#1A2B3C]">{lucroHoje}</div>
-                <div className="mt-3 flex justify-between text-xs text-gray-600">
+                <div className="mt-3 flex align-left text-xs text-gray-600">
                   <span>Entradas: {entradasHoje}</span>
-                  <span>Saídas: {saidasHoje}</span>
+                  <span className="saidas">Saídas: {saidasHoje}</span>
                 </div>
               </section>
 
               <section className="bg-white border rounded-2xl p-4 shadow-sm">
                 <div className="flex items-center justify-between">
-                  <div className="text-xs font-semibold text-gray-500">Total em caixa</div>
+                  <div className="text-m font-semibold text-gray-500">Quanto eu tenho no <span className="font-bold">Caixa?</span></div>
                   <button onClick={() => navigate("/caixa")} className="text-xs font-semibold text-[#1A2B3C] underline">
                     Gerenciar Caixa
                   </button>
                 </div>
                 <div className="mt-2 text-3xl font-black text-[#1A2B3C]">{totalEmCaixa}</div>
                 {data.caixa.status === "ABERTO" ? (
-                  <div className="mt-3 text-xs text-gray-600">Valor inicial: {valorInicialCaixa}</div>
+                  <div className="mt-3 text-xs text-gray-600">Abriu com: {valorInicialCaixa}</div>
                 ) : (
                   <div className="mt-3 text-xs text-gray-600">Caixa fechado</div>
                 )}
@@ -303,7 +303,7 @@ export default function DashboardAdmin() {
 
               <section className="bg-white border rounded-2xl p-4 shadow-sm">
                 <div className="flex items-center justify-between">
-                  <div className="text-xs font-semibold text-gray-500">Produtos</div>
+                  <div className="text-m font-semibold text-gray-500">Como está o meu <span className="font-bold">Estoque</span>?</div>
                   <button onClick={() => navigate("/produtos")} className="text-xs font-semibold text-[#1A2B3C] underline">
                     Ver estoque
                   </button>
@@ -311,15 +311,15 @@ export default function DashboardAdmin() {
 
                 <div className="mt-3 grid grid-cols-1 gap-2 text-sm">
                   <div className="flex items-center justify-between rounded-xl bg-gray-50 px-3 py-2">
-                    <span className="text-gray-700">Em falta</span>
+                    <span className="text-gray-700">Produtos <span className="ff3131 font-bold">em falta</span></span>
                     <span className="font-bold text-[#1A2B3C]">{data.produtos.emFalta}</span>
                   </div>
                   <div className="flex items-center justify-between rounded-xl bg-gray-50 px-3 py-2">
-                    <span className="text-gray-700">Estoque baixo</span>
+                    <span className="text-gray-700">Produtos com <span className="ffde59 font-bold">estoque baixo</span></span>
                     <span className="font-bold text-[#1A2B3C]">{data.produtos.estoqueBaixo}</span>
                   </div>
                   <div className="flex items-center justify-between rounded-xl bg-gray-50 px-3 py-2">
-                    <span className="text-gray-700">Parados</span>
+                    <span className="text-gray-700">Produtos <span className="font-bold">sem vendas</span></span>
                     <span className="font-bold text-[#1A2B3C]">{data.produtos.parados}</span>
                   </div>
                 </div>
@@ -330,7 +330,7 @@ export default function DashboardAdmin() {
         </main>
 
         {/* Navegação inferior fixa (mobile-first) */}
-        <nav className="bottom-nav fixed bottom-0 inset-x-0 border-t z-30">
+        <nav className="fixed bottom-0 inset-x-0 border-t z-30">
           <div className="max-w-md mx-auto px-4 py-3 grid grid-cols-3 gap-2">
             <button
               onClick={() => navigate("/produtos")}
