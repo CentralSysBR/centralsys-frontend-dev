@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 
-// Páginas
+// Importação das Páginas
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import DashboardAdmin from "./pages/DashboardAdmin";
@@ -30,28 +30,11 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+
 function DashboardGate() {
   const { usuario } = useAuth();
   if (usuario?.papel === "ADMIN") return <DashboardAdmin />;
-  return <Dashboard />;
-}
-
-function RootRoute() {
-  const { usuario, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-sm text-gray-600">Carregando...</div>
-      </div>
-    );
-  }
-
-  if (usuario) {
-    return <Navigate to={usuario.papel === "ADMIN" ? "/dashboard" : "/pdv"} replace />;
-  }
-
-  return <Login />;
+  return <DashboardGate />;
 }
 
 export default function App() {
@@ -59,7 +42,7 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<RootRoute />} />
+          <Route path="/" element={<Login />} />
 
           <Route
             path="/dashboard"
@@ -69,7 +52,6 @@ export default function App() {
               </PrivateRoute>
             }
           />
-
           <Route
             path="/historico-vendas"
             element={
@@ -78,7 +60,6 @@ export default function App() {
               </PrivateRoute>
             }
           />
-
           <Route
             path="/pdv"
             element={
@@ -87,7 +68,6 @@ export default function App() {
               </PrivateRoute>
             }
           />
-
           <Route
             path="/caixa"
             element={
@@ -96,7 +76,6 @@ export default function App() {
               </PrivateRoute>
             }
           />
-
           <Route
             path="/produtos"
             element={
@@ -105,7 +84,6 @@ export default function App() {
               </PrivateRoute>
             }
           />
-
           <Route
             path="/despesas"
             element={
