@@ -15,13 +15,10 @@ function formatarMoedaBR(valor: string) {
     });
 }
 
-function moedaParaNumero(valor: string) {
-    return Number(
-        valor
-            .replace(/\./g, "")
-            .replace(",", ".")
-            .replace(/[^\d.-]/g, "")
-    );
+function moedaParaCentavos(valor: string) {
+    // Mantém contrato do backend: dinheiro sempre em centavos (Int).
+    const apenasNumeros = valor.replace(/\D/g, "");
+    return apenasNumeros ? Number(apenasNumeros) : 0;
 }
 
 /* =========================
@@ -50,9 +47,9 @@ export function ModalNovaDespesa({ onClose, onSucesso }: Props) {
     }, [formaPagamento]);
 
     async function salvar() {
-        const valorNumerico = moedaParaNumero(valor);
+        const valorCentavos = moedaParaCentavos(valor);
 
-        if (!descricao || valorNumerico <= 0) {
+        if (!descricao || valorCentavos <= 0) {
             alert("Preencha descrição e valor corretamente");
             return;
         }
@@ -62,7 +59,7 @@ export function ModalNovaDespesa({ onClose, onSucesso }: Props) {
 
             await api.post("/despesas", {
                 descricao,
-                valor: valorNumerico,
+                valorCentavos,
                 formaPagamento,
                 saiDoCaixa,
                 dataDespesa,
