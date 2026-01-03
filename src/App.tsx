@@ -34,7 +34,7 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
 function DashboardGate() {
   const { usuario } = useAuth();
   if (usuario?.papel === "ADMIN") return <DashboardAdmin />;
-  return <DashboardGate />;
+  return <Dashboard />;
 }
 
 export default function App() {
