@@ -1,13 +1,19 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calculator, ArrowLeft, Play, StopCircle, DollarSign, Loader2, ArrowUpCircle, ArrowDownCircle, Wallet } from 'lucide-react';
+import {Calculator, ArrowLeft, Play, StopCircle, DollarSign, Loader2, ArrowUpCircle, ArrowDownCircle, Wallet, Menu, X, LayoutDashboard, History, Package, ShoppingCart, AlertCircle, MessageSquare, CheckSquare } from 'lucide-react';
 import { api } from '../services/api';
+import logo from "../assets/logo_full_color.svg";
+import { useAuth } from "../contexts/AuthContext";
 import { ModalFecharCaixa } from '../components/ModalFecharCaixa';
 import { ModalMovimentacaoCaixa } from '../components/ModalMovimentacaoCaixa';
 import { formatCurrencyBR } from '../utils/formatCurrencyBR';
 import { maskCurrencyInputBR } from '../utils/maskCurrencyInputBR';
 import { parseCurrencyBR } from '../utils/parseCurrencyBR';
 
+
+function classNames(...parts: Array<string | false | null | undefined>) {
+  return parts.filter(Boolean).join(" ");
+}
 
 interface Caixa {
   id: string;
@@ -19,8 +25,22 @@ interface Caixa {
 
 export default function GerenciarCaixa() {
   const navigate = useNavigate();
+  const { logout } = useAuth();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [CaixaAberto, setCaixaAberto] = useState<Caixa | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const menuItems = [
+    { title: "Dashboard", icon: <LayoutDashboard size={24} />, path: "/dashboard" },
+    { title: "PDV / Vendas", icon: <ShoppingCart size={24} />, path: "/pdv" },
+    { title: "Histórico", icon: <History size={24} />, path: "/historico-vendas" },
+    { title: "Produtos", icon: <Package size={24} />, path: "/produtos" },
+    { title: "Caixa", icon: <Calculator size={24} />, path: "/caixa" },
+    { title: "Despesas", icon: <AlertCircle size={24} />, path: "/despesas" },
+    { title: "Relatórios", icon: <LayoutDashboard size={24} />, path: "/relatorios" },
+    { title: "Mensagens", icon: <MessageSquare size={24} />, path: "/mensagens", disabled: true, badge: "Em breve" },
+    { title: "Tarefas", icon: <CheckSquare size={24} />, path: "/tarefas", disabled: true, badge: "Em breve" },
+  ] as const;
   const [valorInicialCentavos, setValorInicial] = useState(formatCurrencyBR(0)); const [isModalFecharOpen, setIsModalFecharOpen] = useState(false);
   const [isModalMovimentarOpen, setIsModalMovimentarOpen] = useState(false);
   const [isFinalizando, setIsFinalizando] = useState(false);
@@ -62,16 +82,79 @@ export default function GerenciarCaixa() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
-      <header className="bg-white border-b p-4 shadow-sm sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto flex items-center gap-3">
-          <button onClick={() => navigate('/dashboard')} className="p-1">
-            <ArrowLeft size={24} className="text-[#1A2B3C]" />
+      <header className="fixed top-0 inset-x-0 bg-white border-b shadow-sm z-20">
+        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+          <img src={logo} alt="CentralSys" className="h-7" />
+          <button
+            onClick={() => setIsMenuOpen(true)}
+            className="p-2 rounded-xl hover:bg-gray-100 active:scale-95 transition"
+            aria-label="Abrir menu"
+          >
+            <Menu size={22} />
           </button>
-          <h1 className="text-xl font-bold text-[#1A2B3C]">Gestão de Caixa</h1>
         </div>
       </header>
 
-      <main className="p-4 max-w-4xl mx-auto">
+      {isMenuOpen && (
+        <div className="fixed inset-0 z-30">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setIsMenuOpen(false)} />
+          <div className="absolute top-0 right-0 h-full w-[85%] max-w-sm bg-[#1A2B3C] shadow-2xl p-4">
+            <div className="flex items-center justify-between mb-6">
+              <div className="text-white font-black text-lg">Menu</div>
+              <button
+                onClick={() => setIsMenuOpen(false)}
+                className="p-2 rounded-xl hover:bg-white/10 active:scale-95 transition text-white"
+                aria-label="Fechar menu"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              {menuItems.map((item) => (
+                <button
+                  key={item.title}
+                  onClick={() => {
+                    if ((item as any).disabled) return;
+                    navigate((item as any).path);
+                    setIsMenuOpen(false);
+                  }}
+                  className={classNames(
+                    "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors text-sm font-medium hover:bg-white/10 text-white",
+                    (item as any).disabled && "opacity-50 cursor-not-allowed"
+                  )}
+                >
+                  <span className="text-white/90">{(item as any).icon}</span>
+                  <span className="flex-1 text-left">{item.title}</span>
+                  {(item as any).badge && (
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/15 text-white/80 font-bold">
+                      {(item as any).badge}
+                    </span>
+                  )}
+                </button>
+              ))}
+
+              <button
+                onClick={() => {
+                  logout();
+                  setIsMenuOpen(false);
+                }}
+                className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-white/10 hover:bg-white/15 text-white text-sm font-black"
+              >
+                Sair
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <main className="pt-[80px] p-4 max-w-4xl mx-auto">
+        <div className="flex items-center gap-3 mb-4">
+          <button onClick={() => navigate('/dashboard')} className="p-2 rounded-xl bg-white border hover:bg-gray-50 active:scale-95 transition" aria-label="Voltar">
+            <ArrowLeft size={18} className="text-[#1A2B3C]" />
+          </button>
+          <h1 className="text-xl font-black text-[#1A2B3C]">Gestão de Caixa</h1>
+        </div>
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 text-gray-400">
             <Loader2 className="animate-spin mb-4" size={40} />

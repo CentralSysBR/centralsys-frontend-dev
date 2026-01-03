@@ -2,24 +2,35 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
+  Calendar,
+  CheckSquare,
+  History,
+  LayoutDashboard,
   Loader2,
-  ShoppingBag,
-  ArrowUpCircle,
+  Menu,
+  MessageSquare,
+  Package,
+  ShoppingCart,
+  Calculator,
+  Wallet,
   ArrowDownCircle,
-  ChevronRight,
+  ArrowUpCircle,
+  X,
 } from "lucide-react";
 
+import logo from "../assets/logo_full_color.svg";
 import { api } from "../services/api";
 import { formatCurrencyBR } from "../utils/formatCurrencyBR";
+import { useAuth } from "../contexts/AuthContext";
 
-type FiltroLancamentos = "TUDO" | "VENDAS" | "DESPESAS";
+type Filtro = "TUDO" | "VENDAS" | "DESPESAS";
 
 interface Venda {
   id: string;
-  status: "EM_PROGRESSO" | "FINALIZADA" | "CANCELADA";
   valorTotalCentavos: number;
   metodoPagamento: string;
   criadoEm: string;
+  status?: string;
   usuario?: { nome: string };
   _count?: { itens: number };
 }
@@ -29,259 +40,277 @@ interface Despesa {
   descricao: string;
   valorCentavos: number;
   formaPagamento: string;
-  status: "QUITADA" | "PARCELADA" | "RECORRENTE" | "CANCELADA";
+  status: string;
   dataDespesa: string;
 }
 
-type Lancamento = {
-  id: string;
-  tipo: "VENDA" | "DESPESA";
-  data: Date;
-  valorCentavos: number;
-  titulo: string;
-  subtitulo: string;
-  statusLabel?: string;
-};
+type Lancamento =
+  | { tipo: "VENDA"; id: string; data: string; valorCentavos: number; metodo: string; titulo: string }
+  | { tipo: "DESPESA"; id: string; data: string; valorCentavos: number; metodo: string; titulo: string };
 
-function startOfDay(d: Date) {
-  const x = new Date(d);
-  x.setHours(0, 0, 0, 0);
-  return x;
-}
-
-function endOfDay(d: Date) {
-  const x = new Date(d);
-  x.setHours(23, 59, 59, 999);
-  return x;
-}
-
-function daysAgo(days: number) {
-  const d = new Date();
-  d.setDate(d.getDate() - days);
-  return d;
-}
-
-async function fetchVendasPeriodo(inicio: Date, fim: Date) {
-  const limit = 100;
-  const maxPages = 20;
-
-  const vendas: Venda[] = [];
-  for (let page = 1; page <= maxPages; page += 1) {
-    const res = await api.get("/vendas", { params: { page, limit } });
-    const chunk = (res.data?.data ?? []) as Venda[];
-
-    if (!Array.isArray(chunk) || chunk.length === 0) break;
-
-    vendas.push(...chunk);
-
-    const last = chunk[chunk.length - 1];
-    const lastDate = last?.criadoEm ? new Date(last.criadoEm) : null;
-
-    if (chunk.length < limit) break;
-    if (lastDate && lastDate < inicio) break;
-  }
-
-  return vendas.filter((v) => {
-    if (v.status !== "FINALIZADA") return false;
-    const dt = new Date(v.criadoEm);
-    return dt >= inicio && dt <= fim;
-  });
-}
-
-async function fetchDespesasPeriodo(inicio: Date, fim: Date) {
-  const limit = 100;
-  const res = await api.get("/despesas", {
-    params: {
-      page: 1,
-      limit,
-      dataInicio: inicio.toISOString(),
-      dataFim: fim.toISOString(),
-    },
-  });
-
-  const despesas = (res.data?.data ?? []) as Despesa[];
-  if (!Array.isArray(despesas)) return [];
-
-  return despesas.filter((d) => d.status !== "CANCELADA");
+function classNames(...parts: Array<string | false | null | undefined>) {
+  return parts.filter(Boolean).join(" ");
 }
 
 export default function DashboardVendas() {
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
-  const [filtro, setFiltro] = useState<FiltroLancamentos>("TUDO");
-  const [loading, setLoading] = useState(true);
-  const [erro, setErro] = useState<string | null>(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [filtro, setFiltro] = useState<Filtro>("TUDO");
 
   const [vendas, setVendas] = useState<Venda[]>([]);
   const [despesas, setDespesas] = useState<Despesa[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const inicioPeriodo = useMemo(() => startOfDay(daysAgo(30)), []);
-  const fimPeriodo = useMemo(() => endOfDay(new Date()), []);
+  const menuItems = [
+    { title: "Dashboard", icon: <LayoutDashboard size={24} />, path: "/dashboard" },
+    { title: "PDV / Vendas", icon: <ShoppingCart size={24} />, path: "/pdv" },
+    { title: "Histórico", icon: <History size={24} />, path: "/historico-vendas" },
+    { title: "Produtos", icon: <Package size={24} />, path: "/produtos" },
+    { title: "Caixa", icon: <Calculator size={24} />, path: "/caixa" },
+    { title: "Despesas", icon: <ArrowDownCircle size={24} />, path: "/despesas" },
+    { title: "Relatórios", icon: <ArrowUpCircle size={24} />, path: "/relatorios" },
+    { title: "Mensagens", icon: <MessageSquare size={24} />, path: "/mensagens", disabled: true, badge: "Em breve" },
+    { title: "Tarefas", icon: <CheckSquare size={24} />, path: "/tarefas", disabled: true, badge: "Em breve" },
+  ] as const;
 
   useEffect(() => {
     async function carregar() {
       setLoading(true);
-      setErro(null);
-
       try {
-        const [v, d] = await Promise.all([
-          fetchVendasPeriodo(inicioPeriodo, fimPeriodo),
-          fetchDespesasPeriodo(inicioPeriodo, fimPeriodo),
-        ]);
+        const [vRes, dRes] = await Promise.all([api.get("/vendas"), api.get("/despesas")]);
+        const v = (vRes.data?.data ?? []) as Venda[];
+        const d = (dRes.data?.data ?? []) as Despesa[];
 
-        setVendas(v);
-        setDespesas(d);
+        // Excluir canceladas aqui: vendas somente FINALIZADA; despesas != CANCELADA
+        const vOk = v.filter((x) => (x.status ? x.status === "FINALIZADA" : true));
+        const dOk = d.filter((x) => x.status !== "CANCELADA");
+
+        // Últimos 30 dias (client-side)
+        const since = new Date();
+        since.setDate(since.getDate() - 30);
+        const v30 = vOk.filter((x) => new Date(x.criadoEm) >= since);
+        const d30 = dOk.filter((x) => new Date(x.dataDespesa) >= since);
+
+        setVendas(v30);
+        setDespesas(d30);
       } catch (e) {
-        console.error(e);
-        setErro("Não foi possível carregar o histórico.");
+        console.error("Erro ao carregar histórico:", e);
+        setVendas([]);
+        setDespesas([]);
       } finally {
         setLoading(false);
       }
     }
-
     void carregar();
-  }, [inicioPeriodo, fimPeriodo]);
+  }, []);
 
-  const lancamentos: Lancamento[] = useMemo(() => {
-    const vendasLanc: Lancamento[] = vendas.map((v) => ({
-      id: v.id,
-      tipo: "VENDA",
-      data: new Date(v.criadoEm),
-      valorCentavos: v.valorTotalCentavos,
-      titulo: "Venda",
-      subtitulo: `${v._count?.itens ?? 0} itens • ${v.usuario?.nome ?? "—"}`,
-      statusLabel: v.metodoPagamento,
-    }));
-
-    const despesasLanc: Lancamento[] = despesas.map((d) => ({
-      id: d.id,
-      tipo: "DESPESA",
-      data: new Date(d.dataDespesa),
-      valorCentavos: d.valorCentavos,
-      titulo: d.descricao,
-      subtitulo: `Despesa • ${d.formaPagamento}`,
-      statusLabel: d.status,
-    }));
-
-    const all = [...vendasLanc, ...despesasLanc].sort((a, b) => b.data.getTime() - a.data.getTime());
-
-    if (filtro === "VENDAS") return all.filter((x) => x.tipo === "VENDA");
-    if (filtro === "DESPESAS") return all.filter((x) => x.tipo === "DESPESA");
-    return all;
-  }, [vendas, despesas, filtro]);
-
-  const totalVendas = useMemo(
-    () => vendas.reduce((acc, v) => acc + Number(v.valorTotalCentavos || 0), 0),
+  const totalVendasCentavos = useMemo(
+    () => vendas.reduce((acc, v) => acc + (Number.isFinite(v.valorTotalCentavos) ? Number(v.valorTotalCentavos) : 0), 0),
     [vendas]
   );
-
-  const totalDespesas = useMemo(
-    () => despesas.reduce((acc, d) => acc + Number(d.valorCentavos || 0), 0),
+  const totalDespesasCentavos = useMemo(
+    () => despesas.reduce((acc, d) => acc + (Number.isFinite(d.valorCentavos) ? Number(d.valorCentavos) : 0), 0),
     [despesas]
   );
 
-  const cardPrincipal = useMemo(() => {
-    if (filtro === "VENDAS") return { titulo: "Total de Vendas", valorCentavos: totalVendas };
-    if (filtro === "DESPESAS") return { titulo: "Total de Despesas", valorCentavos: totalDespesas };
-    return { titulo: "Saldo", valorCentavos: totalVendas - totalDespesas };
-  }, [filtro, totalVendas, totalDespesas]);
+  const saldoCentavos = totalVendasCentavos - totalDespesasCentavos;
+
+  const lancamentos: Lancamento[] = useMemo(() => {
+    const list: Lancamento[] = [];
+    for (const v of vendas) {
+      list.push({
+        tipo: "VENDA",
+        id: v.id,
+        data: v.criadoEm,
+        valorCentavos: Number(v.valorTotalCentavos) || 0,
+        metodo: v.metodoPagamento ?? "-",
+        titulo: `Venda${v._count?.itens != null ? ` • ${v._count.itens} itens` : ""}`,
+      });
+    }
+    for (const d of despesas) {
+      list.push({
+        tipo: "DESPESA",
+        id: d.id,
+        data: d.dataDespesa,
+        valorCentavos: Number(d.valorCentavos) || 0,
+        metodo: d.formaPagamento ?? "-",
+        titulo: d.descricao,
+      });
+    }
+    return list.sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
+  }, [vendas, despesas]);
+
+  const lancamentosFiltrados = useMemo(() => {
+    if (filtro === "VENDAS") return lancamentos.filter((l) => l.tipo === "VENDA");
+    if (filtro === "DESPESAS") return lancamentos.filter((l) => l.tipo === "DESPESA");
+    return lancamentos;
+  }, [lancamentos, filtro]);
+
+  const cardTitulo = filtro === "TUDO" ? "Saldo" : filtro === "VENDAS" ? "Total de Vendas" : "Total de Despesas";
+  const cardValorCentavos = filtro === "TUDO" ? saldoCentavos : filtro === "VENDAS" ? totalVendasCentavos : totalDespesasCentavos;
+
+  const cardColor =
+    filtro === "TUDO" ? (cardValorCentavos < 0 ? "#ff3131" : "#2D6A4F") : "#1A2B3C";
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      <header className="bg-white border-b p-4 sticky top-0 z-10">
-        <div className="flex items-center gap-4 max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gray-50">
+      {/* Top nav (logo + hamburger) */}
+      <header className="fixed top-0 inset-x-0 bg-white border-b shadow-sm z-20">
+        <div className="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
+          <img src={logo} alt="CentralSys" className="h-7" />
           <button
-            onClick={() => navigate("/dashboard")}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-            aria-label="Voltar"
+            onClick={() => setIsMenuOpen(true)}
+            className="p-2 rounded-xl hover:bg-gray-100 active:scale-95 transition"
+            aria-label="Abrir menu"
           >
-            <ArrowLeft size={24} className="text-gray-700" />
+            <Menu size={22} />
           </button>
-
-          <h1 className="text-xl font-black text-gray-800">Histórico</h1>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto p-4 space-y-4">
-        <section className="bg-white border rounded-2xl p-4 shadow-sm">
-          <p className="text-sm text-gray-500 font-medium">{cardPrincipal.titulo}</p>
-          <h2 className="text-3xl font-black mt-1">{formatCurrencyBR(cardPrincipal.valorCentavos)}</h2>
-          <p className="text-xs text-gray-500 mt-2">Últimos 30 dias</p>
-        </section>
-
-        <div className="flex items-center justify-between mt-6 mb-2">
-          <h3 className="font-bold text-gray-700 flex items-center gap-2">
-            <ShoppingBag size={18} /> Últimos Lançamentos
-          </h3>
-
-          <select
-            className="border rounded-xl px-3 py-2 text-sm bg-white"
-            value={filtro}
-            onChange={(e) => setFiltro(e.target.value as FiltroLancamentos)}
-            aria-label="Filtrar lançamentos"
-          >
-            <option value="TUDO">Tudo</option>
-            <option value="VENDAS">Vendas</option>
-            <option value="DESPESAS">Despesas</option>
-          </select>
-        </div>
-
-        {loading ? (
-          <div className="flex justify-center py-10">
-            <Loader2 className="animate-spin text-[#2D6A4F]" size={32} />
-          </div>
-        ) : erro ? (
-          <div className="text-center py-20 text-gray-500">
-            <p>{erro}</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {lancamentos.map((l) => (
-              <div
-                key={`${l.tipo}-${l.id}`}
-                className="bg-white border rounded-2xl p-4 shadow-sm flex items-center justify-between gap-3"
+      {/* Sidebar */}
+      {isMenuOpen && (
+        <div className="fixed inset-0 z-30">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setIsMenuOpen(false)} />
+          <div className="absolute top-0 right-0 h-full w-[85%] max-w-sm bg-[#1A2B3C] shadow-2xl p-4">
+            <div className="flex items-center justify-between mb-6">
+              <div className="text-white font-black text-lg">Menu</div>
+              <button
+                onClick={() => setIsMenuOpen(false)}
+                className="p-2 rounded-xl hover:bg-white/10 active:scale-95 transition text-white"
+                aria-label="Fechar menu"
               >
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="font-bold text-gray-800 truncate">{l.titulo}</p>
-                      <p className="text-xs text-gray-500 truncate">{l.subtitulo}</p>
-                    </div>
+                <X size={20} />
+              </button>
+            </div>
 
-                    <div className="text-right shrink-0">
-                      <p className="text-xs text-gray-500">
-                        {l.data.toLocaleDateString("pt-BR")}
-                      </p>
-                    </div>
-                  </div>
+            <div className="space-y-2">
+              {menuItems.map((item) => (
+                <button
+                  key={item.title}
+                  onClick={() => {
+                    if ((item as any).disabled) return;
+                    navigate((item as any).path);
+                    setIsMenuOpen(false);
+                  }}
+                  className={classNames(
+                    "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors text-sm font-medium hover:bg-white/10 text-white",
+                    (item as any).disabled && "opacity-50 cursor-not-allowed"
+                  )}
+                >
+                  <span className="text-white/90">{item.icon}</span>
+                  <span className="flex-1 text-left">{item.title}</span>
+                  {(item as any).badge && (
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/15 text-white/80 font-bold">
+                      {(item as any).badge}
+                    </span>
+                  )}
+                </button>
+              ))}
 
-                  <div className="mt-2 flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2 text-gray-600 min-w-0">
-                      {l.tipo === "VENDA" ? (
-                        <ArrowUpCircle size={16} className="text-[#2D6A4F]" />
-                      ) : (
-                        <ArrowDownCircle size={16} className="text-[#ff3131]" />
-                      )}
-                      <span className="truncate">{l.statusLabel ?? ""}</span>
-                    </div>
-
-                    <p className="font-black text-gray-900">
-                      {formatCurrencyBR(l.valorCentavos)}
-                    </p>
-                  </div>
-                </div>
-
-                <ChevronRight size={18} className="text-gray-300 shrink-0" />
-              </div>
-            ))}
-
-            {lancamentos.length === 0 && (
-              <div className="text-center py-20 text-gray-400">
-                <p>Nenhum lançamento encontrado.</p>
-              </div>
-            )}
+              <button
+                onClick={() => {
+                  logout();
+                  setIsMenuOpen(false);
+                }}
+                className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-white/10 hover:bg-white/15 text-white text-sm font-black"
+              >
+                Sair
+              </button>
+            </div>
           </div>
-        )}
+        </div>
+      )}
+
+      <main className="pt-[64px] pb-16 px-4">
+        <div className="max-w-md mx-auto space-y-4">
+          <div className="flex items-center gap-3 mt-4">
+            <button
+              onClick={() => navigate("/dashboard")}
+              className="p-2 rounded-xl bg-white border hover:bg-gray-50 active:scale-95 transition"
+              aria-label="Voltar"
+            >
+              <ArrowLeft size={18} />
+            </button>
+            <h1 className="text-xl font-black text-[#1A2B3C]">Histórico</h1>
+          </div>
+
+          <section className="bg-white border rounded-2xl p-4 shadow-sm">
+            <div className="text-xs font-semibold text-gray-500">{cardTitulo}</div>
+            <div className="mt-2 text-3xl font-black" style={{ color: cardColor }}>
+              {formatCurrencyBR(cardValorCentavos)}
+            </div>
+
+            <div className="mt-4 flex items-center justify-between">
+              <div className="text-xs text-gray-500 font-semibold">Últimos Lançamentos</div>
+
+              <select
+                value={filtro}
+                onChange={(e) => setFiltro(e.target.value as Filtro)}
+                className="text-xs font-bold border rounded-xl px-3 py-2 bg-white"
+                aria-label="Filtro"
+              >
+                <option value="TUDO">Tudo</option>
+                <option value="VENDAS">Vendas</option>
+                <option value="DESPESAS">Despesas</option>
+              </select>
+            </div>
+          </section>
+
+          {loading ? (
+            <div className="bg-white border rounded-2xl p-4 flex items-center gap-3 text-sm text-gray-600">
+              <Loader2 className="animate-spin" size={18} />
+              Carregando...
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {lancamentosFiltrados.length === 0 ? (
+                <div className="bg-white border rounded-2xl p-4 text-sm text-gray-600">
+                  Nenhum lançamento encontrado no período.
+                </div>
+              ) : (
+                lancamentosFiltrados.map((l) => {
+                  const isVenda = l.tipo === "VENDA";
+                  return (
+                    <div
+                      key={`${l.tipo}-${l.id}`}
+                      className="bg-white border rounded-2xl p-4 shadow-sm flex items-center justify-between gap-3"
+                    >
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="text-[10px] font-black px-2 py-1 rounded-full"
+                            style={{ background: isVenda ? "#2D6A4F22" : "#ff313122", color: isVenda ? "#2D6A4F" : "#ff3131" }}
+                          >
+                            {isVenda ? "Entrada" : "Saída"}
+                          </div>
+                          <div className="text-sm font-bold text-[#1A2B3C] truncate">{l.titulo}</div>
+                        </div>
+
+                        <div className="mt-1 flex items-center gap-2 text-[11px] text-gray-600">
+                          <Calendar size={14} />
+                          <span>{new Date(l.data).toLocaleString("pt-BR")}</span>
+                        </div>
+
+                        <div className="mt-2 text-xs text-gray-600">
+                          <span className="font-semibold">Forma:</span> {l.metodo}
+                        </div>
+                      </div>
+
+                      <div className="text-right shrink-0">
+                        <div className="text-base font-black" style={{ color: isVenda ? "#2D6A4F" : "#ff3131" }}>
+                          {isVenda ? formatCurrencyBR(l.valorCentavos) : `-${formatCurrencyBR(l.valorCentavos)}`}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          )}
+        </div>
       </main>
     </div>
   );

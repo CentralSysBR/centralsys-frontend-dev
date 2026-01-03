@@ -32,13 +32,13 @@ export function CardLucro({ lucro, margem, variacao, insight }: Props) {
           )}
 
           <span className={positivo ? "text-green-700" : "text-red-700"}>
-            {Math.abs(variacao).toFixed(1)}% em relação ao período anterior
+            {Math.abs(variacaoSafe).toFixed(1)}% em relação ao período anterior
           </span>
         </div>
       )}
 
       <p className="text-xs text-green-700">
-        De cada R$ 100 vendidos, você fica com R$ {margem.toFixed(0)}
+        De cada R$ 100 vendidos, você fica com R$ {margemSafe.toFixed(0)}
       </p>
 
       {insight && (

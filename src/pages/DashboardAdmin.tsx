@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AlertCircle, Calculator, History, LayoutDashboard, Loader2, Lock, LogOut, Menu, Package, ShoppingCart, Unlock, X } from "lucide-react";
+import { AlertCircle, Calculator, History, LayoutDashboard, Loader2, Lock, LogOut, Menu, Package, ShoppingCart, Unlock, X, MessageSquare, CheckSquare } from "lucide-react";
 
 import logo from "../assets/logo_full_color.svg";
 import { useAuth } from "../contexts/AuthContext";
@@ -41,10 +41,13 @@ export default function DashboardAdmin() {
   const menuItems = [
     { title: "PDV / Vendas", icon: <ShoppingCart size={24} />, path: "/pdv" },
     { title: "Histórico", icon: <History size={24} />, path: "/historico-vendas" },
-    { title: "Produtos", icon: <Package size={24} />, path: "/produtos" },
+    { title: "Como está meu Estoque", icon: <Package size={24} />, path: "/produtos" },
     { title: "Caixa", icon: <Calculator size={24} />, path: "/caixa" },
     { title: "Despesas", icon: <AlertCircle size={24} />, path: "/despesas" },
     { title: "Relatórios", icon: <LayoutDashboard size={24} />, path: "/relatorios" },
+    { title: "Mensagens", icon: <MessageSquare size={24} />, path: "/mensagens", disabled: true, badge: "Em breve" },
+    { title: "Tarefas", icon: <CheckSquare size={24} />, path: "/tarefas", disabled: true, badge: "Em breve" },
+
   ];
 
   async function load() {
@@ -90,17 +93,7 @@ export default function DashboardAdmin() {
 
   const valorInicialCaixa = useMemo(() => formatCurrencyBR(data?.caixa.valorInicialCentavos), [data?.caixa.valorInicialCentavos]);
 
-  
-  const lucroNegativo = (data?.hoje.lucroCentavos ?? 0) < 0;
-
-  const caixaAbaixoOuIgualAbertura =
-    data?.caixa.status === "ABERTO" &&
-    data.caixa.valorAtualCentavos != null &&
-    data.caixa.valorInicialCentavos != null
-      ? data.caixa.valorAtualCentavos <= data.caixa.valorInicialCentavos
-      : null;
-
-async function handleChipCaixaClick() {
+  async function handleChipCaixaClick() {
     if (loading) return;
 
     if (caixaStatus === "FECHADO") {
@@ -187,13 +180,17 @@ async function handleChipCaixaClick() {
               <button
                 key={item.title}
                 onClick={() => {
+                  if (item.disabled) return;
                   navigate(item.path);
                   setIsMenuOpen(false);
                 }}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors text-sm font-medium hover:bg-white/10"
+                className={classNames("w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors text-sm font-medium hover:bg-white/10", item.disabled && "opacity-50 cursor-not-allowed")}
               >
                 <span className="text-white/90">{item.icon}</span>
-                <span>{item.title}</span>
+                <span className="flex-1 text-left">{item.title}</span>
+                {item.badge && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/15 text-white/80 font-bold">{item.badge}</span>
+                )}
               </button>
             ))}
 
@@ -286,13 +283,13 @@ async function handleChipCaixaClick() {
                 <div className="flex items-center justify-between">
                   <div className="text-m font-semibold text-gray-500">Quanto eu Ganhei hoje?</div>
                   <button onClick={() => navigate("/historico-vendas")} className="text-xs font-semibold text-[#1A2B3C] underline">
-                    Ver Histórico
+                    Ver Extrato
                   </button>
                 </div>
-                <div className={classNames("mt-2 text-3xl font-black", lucroNegativo ? "text-[#ff3131]" : "text-[#2D6A4F]")}>{lucroHoje}</div>
+                <div className="mt-2 text-3xl font-black text-[#1A2B3C]">{lucroHoje}</div>
                 <div className="mt-3 flex align-left text-xs text-gray-600">
-                  <span className="entradas">Vendas</span><span>: {entradasHoje}</span>
-                  <span className="saidas">Despesas</span><span>: {saidasHoje}</span>
+                  <span>Entradas: {entradasHoje}</span>
+                  <span className="saidas">Saídas: {saidasHoje}</span>
                 </div>
               </section>
 
@@ -303,7 +300,7 @@ async function handleChipCaixaClick() {
                     Gerenciar Caixa
                   </button>
                 </div>
-                <div className={classNames("mt-2 text-3xl font-black", data?.caixa.status === "ABERTO" ? (caixaAbaixoOuIgualAbertura ? "text-[#ff3131]" : "text-[#2D6A4F]") : "text-[#1A2B3C]")}>{totalEmCaixa}</div>
+                <div className="mt-2 text-3xl font-black text-[#1A2B3C]">{totalEmCaixa}</div>
                 {data.caixa.status === "ABERTO" ? (
                   <div className="mt-3 text-xs text-gray-600">Abriu com: {valorInicialCaixa}</div>
                 ) : (
@@ -321,15 +318,15 @@ async function handleChipCaixaClick() {
 
                 <div className="mt-3 grid grid-cols-1 gap-2 text-sm">
                   <div className="flex items-center justify-between rounded-xl bg-gray-50 px-3 py-2">
-                    <span className="text-gray-700">Produtos <span className="ff3131 font-bold">em falta</span></span>
+                    <span className="text-gray-700">Produtos <span className="ff3131 font-bold">EM FALTA</span></span>
                     <span className="font-bold text-[#1A2B3C]">{data.produtos.emFalta}</span>
                   </div>
                   <div className="flex items-center justify-between rounded-xl bg-gray-50 px-3 py-2">
-                    <span className="text-gray-700">Produtos com <span className="ffde59 font-bold">estoque baixo</span></span>
+                    <span className="text-gray-700">Produtos come <span className="ffde59 font-bold">ESTOQUE BAIXO</span></span>
                     <span className="font-bold text-[#1A2B3C]">{data.produtos.estoqueBaixo}</span>
                   </div>
                   <div className="flex items-center justify-between rounded-xl bg-gray-50 px-3 py-2">
-                    <span className="text-gray-700">Produtos <span className="font-bold">sem vendas</span></span>
+                    <span className="text-gray-700">Produtos <span className="font-bold">SEM VENDAS</span></span>
                     <span className="font-bold text-[#1A2B3C]">{data.produtos.parados}</span>
                   </div>
                 </div>
