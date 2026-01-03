@@ -13,6 +13,7 @@ import {
 import { CardLucro } from "../components/relatorios";
 import { CardFluxo } from "../components/relatorios/CardFluxo";
 import { GraficoFluxo } from "../components/relatorios/GraficoFluxo";
+import { formatCurrencyBR } from "../utils/formatCurrencyBR";
 
 export default function Relatorios() {
   /* ======================
@@ -108,7 +109,7 @@ export default function Relatorios() {
       {/* 📊 RESUMO FINANCEIRO */}
       <section className="bg-white p-4 rounded shadow">
         <h2 className="font-semibold mb-2">Resumo Financeiro</h2>
-        <p>Total faturado: R$ {financeiro.faturamentoTotal}</p>
+        <p>Total faturado: {formatCurrencyBR(financeiro.faturamentoTotal)}</p>
         <p>Vendas realizadas: {financeiro.totalVendas}</p>
       </section>
 
@@ -118,7 +119,7 @@ export default function Relatorios() {
         <ul>
           {topProdutos.map((p, i) => (
             <li key={i}>
-              {p.nome} — R$ {p.totalFaturadoCentavos}
+              {p.nome} — {formatCurrencyBR(p.totalFaturadoCentavos)}
             </li>
           ))}
         </ul>

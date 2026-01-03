@@ -330,7 +330,7 @@ export default function DashboardAdmin() {
         </main>
 
         {/* Navegação inferior fixa (mobile-first) */}
-        <nav className="fixed bottom-0 inset-x-0 bg-white border-t z-30">
+        <nav className="bottom-nav fixed bottom-0 inset-x-0 border-t z-30">
           <div className="max-w-md mx-auto px-4 py-3 grid grid-cols-3 gap-2">
             <button
               onClick={() => navigate("/produtos")}

@@ -49,3 +49,7 @@ input[type="number"]::-webkit-outer-spin-button {
 input[type="number"] {
   -moz-appearance: textfield;
 }
+
+.bottom-nav {
+  background-color: #2D6A4F;
+}
