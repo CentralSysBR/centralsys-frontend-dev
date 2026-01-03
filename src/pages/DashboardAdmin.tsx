@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AlertCircle, Calculator, History, Loader2, Lock, LogOut, Menu, Package, ShoppingCart, Unlock, X } from "lucide-react";
+import { AlertCircle, Calculator, History, LayoutDashboard, Loader2, Lock, LogOut, Menu, Package, ShoppingCart, Unlock, X } from "lucide-react";
 
 import logo from "../assets/logo_full_color.svg";
 import { useAuth } from "../contexts/AuthContext";
@@ -43,6 +43,8 @@ export default function DashboardAdmin() {
     { title: "Histórico", icon: <History size={24} />, path: "/historico-vendas" },
     { title: "Produtos", icon: <Package size={24} />, path: "/produtos" },
     { title: "Caixa", icon: <Calculator size={24} />, path: "/caixa" },
+    { title: "Despesas", icon: <AlertCircle size={24} />, path: "/despesas" },
+    { title: "Relatórios", icon: <LayoutDashboard size={24} />, path: "/relatorios" },
   ];
 
   async function load() {
@@ -228,7 +230,7 @@ export default function DashboardAdmin() {
         )}
 
         {/* Conteúdo */}
-        <main className="flex-1 p-4 lg:p-8">
+        <main className="flex-1 p-4 lg:p-8 pb-28">
           {/* Área de título (abaixo da barra de navegação, acima dos cards) */}
           <div className="mb-6 flex items-start justify-between gap-4">
             <div className="min-w-0">
@@ -271,7 +273,12 @@ export default function DashboardAdmin() {
           {!loading && !error && data && (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               <section className="bg-white border rounded-2xl p-4 shadow-sm">
-                <div className="text-xs font-semibold text-gray-500">Lucro de hoje</div>
+                <div className="flex items-center justify-between">
+                  <div className="text-xs font-semibold text-gray-500">Lucro de hoje</div>
+                  <button onClick={() => navigate("/historico-vendas")} className="text-xs font-semibold text-[#1A2B3C] underline">
+                    Ver Histórico
+                  </button>
+                </div>
                 <div className="mt-2 text-3xl font-black text-[#1A2B3C]">{lucroHoje}</div>
                 <div className="mt-3 flex justify-between text-xs text-gray-600">
                   <span>Entradas: {entradasHoje}</span>
@@ -280,7 +287,12 @@ export default function DashboardAdmin() {
               </section>
 
               <section className="bg-white border rounded-2xl p-4 shadow-sm">
-                <div className="text-xs font-semibold text-gray-500">Total em caixa</div>
+                <div className="flex items-center justify-between">
+                  <div className="text-xs font-semibold text-gray-500">Total em caixa</div>
+                  <button onClick={() => navigate("/caixa")} className="text-xs font-semibold text-[#1A2B3C] underline">
+                    Gerenciar Caixa
+                  </button>
+                </div>
                 <div className="mt-2 text-3xl font-black text-[#1A2B3C]">{totalEmCaixa}</div>
                 {data.caixa.status === "ABERTO" ? (
                   <div className="mt-3 text-xs text-gray-600">Valor inicial: {valorInicialCaixa}</div>
@@ -314,7 +326,36 @@ export default function DashboardAdmin() {
               </section>
             </div>
           )}
+        
         </main>
+
+        {/* Navegação inferior fixa (mobile-first) */}
+        <nav className="fixed bottom-0 inset-x-0 bg-white border-t z-30">
+          <div className="max-w-md mx-auto px-4 py-3 grid grid-cols-3 gap-2">
+            <button
+              onClick={() => navigate("/produtos")}
+              className="rounded-2xl border bg-gray-50 py-3 flex flex-col items-center justify-center gap-1 text-xs font-semibold text-[#1A2B3C]"
+            >
+              <Package size={18} />
+              Estoque
+            </button>
+            <button
+              onClick={() => navigate("/pdv")}
+              className="rounded-2xl border bg-gray-50 py-3 flex flex-col items-center justify-center gap-1 text-xs font-semibold text-[#1A2B3C]"
+            >
+              <ShoppingCart size={18} />
+              PDV
+            </button>
+            <button
+              onClick={() => navigate("/caixa")}
+              className="rounded-2xl border bg-gray-50 py-3 flex flex-col items-center justify-center gap-1 text-xs font-semibold text-[#1A2B3C]"
+            >
+              <Calculator size={18} />
+              Caixa
+            </button>
+          </div>
+        </nav>
+
 
         {abrirCaixa.open && (
           <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center">
