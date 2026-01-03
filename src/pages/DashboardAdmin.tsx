@@ -90,7 +90,17 @@ export default function DashboardAdmin() {
 
   const valorInicialCaixa = useMemo(() => formatCurrencyBR(data?.caixa.valorInicialCentavos), [data?.caixa.valorInicialCentavos]);
 
-  async function handleChipCaixaClick() {
+  
+  const lucroNegativo = (data?.hoje.lucroCentavos ?? 0) < 0;
+
+  const caixaAbaixoOuIgualAbertura =
+    data?.caixa.status === "ABERTO" &&
+    data.caixa.valorAtualCentavos != null &&
+    data.caixa.valorInicialCentavos != null
+      ? data.caixa.valorAtualCentavos <= data.caixa.valorInicialCentavos
+      : null;
+
+async function handleChipCaixaClick() {
     if (loading) return;
 
     if (caixaStatus === "FECHADO") {
@@ -276,13 +286,13 @@ export default function DashboardAdmin() {
                 <div className="flex items-center justify-between">
                   <div className="text-m font-semibold text-gray-500">Quanto eu Ganhei hoje?</div>
                   <button onClick={() => navigate("/historico-vendas")} className="text-xs font-semibold text-[#1A2B3C] underline">
-                    Ver Extrato
+                    Ver Histórico
                   </button>
                 </div>
-                <div className="mt-2 text-3xl font-black text-[#1A2B3C]">{lucroHoje}</div>
+                <div className={classNames("mt-2 text-3xl font-black", lucroNegativo ? "text-[#ff3131]" : "text-[#2D6A4F]")}>{lucroHoje}</div>
                 <div className="mt-3 flex align-left text-xs text-gray-600">
-                  <span>Entradas: {entradasHoje}</span>
-                  <span className="saidas">Saídas: {saidasHoje}</span>
+                  <span className="entradas">Vendas</span><span>: {entradasHoje}</span>
+                  <span className="saidas">Despesas</span><span>: {saidasHoje}</span>
                 </div>
               </section>
 
@@ -293,7 +303,7 @@ export default function DashboardAdmin() {
                     Gerenciar Caixa
                   </button>
                 </div>
-                <div className="mt-2 text-3xl font-black text-[#1A2B3C]">{totalEmCaixa}</div>
+                <div className={classNames("mt-2 text-3xl font-black", data?.caixa.status === "ABERTO" ? (caixaAbaixoOuIgualAbertura ? "text-[#ff3131]" : "text-[#2D6A4F]") : "text-[#1A2B3C]")}>{totalEmCaixa}</div>
                 {data.caixa.status === "ABERTO" ? (
                   <div className="mt-3 text-xs text-gray-600">Abriu com: {valorInicialCaixa}</div>
                 ) : (

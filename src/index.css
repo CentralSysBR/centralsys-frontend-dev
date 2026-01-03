@@ -55,6 +55,11 @@ input[type="number"] {
 }
 .saidas {
   margin-left: 20px;
+  color: #ff3131;
+}
+.entradas {
+  
+  color: #2D6A4F;
 }
 .ff3131 {
   color: #ff3131;
