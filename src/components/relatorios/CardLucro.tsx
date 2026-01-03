@@ -1,7 +1,6 @@
 import { ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { formatCurrencyBR } from "../../utils/formatCurrencyBR";
 
-
 interface Props {
   lucro: number;
   margem: number;
@@ -10,8 +9,11 @@ interface Props {
 }
 
 export function CardLucro({ lucro, margem, variacao, insight }: Props) {
+  const variacaoSafe = typeof variacao === "number" ? variacao : 0;
+  const margemSafe = typeof margem === "number" ? margem : 0;
+
   const temVariacao = typeof variacao === "number";
-  const positivo = temVariacao && variacao >= 0;
+  const positivo = variacaoSafe >= 0;
 
   return (
     <section className="bg-green-50 p-5 rounded-xl border border-green-200 space-y-1">

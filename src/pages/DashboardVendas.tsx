@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
+
   ArrowLeft,
   Calendar,
   CheckSquare,
@@ -17,6 +18,10 @@ import {
   ArrowUpCircle,
   X,
 } from "lucide-react";
+
+import { sideMenuItems } from "../components/layout";
+
+import { SideMenuList } from "../components/layout";
 
 import logo from "../assets/logo_full_color.svg";
 import { api } from "../services/api";
@@ -63,19 +68,9 @@ export default function DashboardVendas() {
   const [despesas, setDespesas] = useState<Despesa[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const menuItems = [
-    { title: "Dashboard", icon: <LayoutDashboard size={24} />, path: "/dashboard" },
-    { title: "PDV / Vendas", icon: <ShoppingCart size={24} />, path: "/pdv" },
-    { title: "Histórico", icon: <History size={24} />, path: "/historico-vendas" },
-    { title: "Produtos", icon: <Package size={24} />, path: "/produtos" },
-    { title: "Caixa", icon: <Calculator size={24} />, path: "/caixa" },
-    { title: "Despesas", icon: <ArrowDownCircle size={24} />, path: "/despesas" },
-    { title: "Relatórios", icon: <ArrowUpCircle size={24} />, path: "/relatorios" },
-    { title: "Mensagens", icon: <MessageSquare size={24} />, path: "/mensagens", disabled: true, badge: "Em breve" },
-    { title: "Tarefas", icon: <CheckSquare size={24} />, path: "/tarefas", disabled: true, badge: "Em breve" },
-  ] as const;
+  const menuItems = sideMenuItems;
 
-  useEffect(() => {
+useEffect(() => {
     async function carregar() {
       setLoading(true);
       try {

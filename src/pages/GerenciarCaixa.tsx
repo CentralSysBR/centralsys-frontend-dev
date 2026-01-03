@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {Calculator, ArrowLeft, Play, StopCircle, DollarSign, Loader2, ArrowUpCircle, ArrowDownCircle, Wallet, Menu, X, LayoutDashboard, History, Package, ShoppingCart, AlertCircle, MessageSquare, CheckSquare } from 'lucide-react';
+import {Calculator, ArrowLeft, Play, StopCircle, DollarSign, Loader2, ArrowUpCircle, ArrowDownCircle, Wallet, Menu, X} from 'lucide-react';
 import { api } from '../services/api';
 import logo from "../assets/logo_full_color.svg";
 import { useAuth } from "../contexts/AuthContext";
@@ -9,6 +9,8 @@ import { ModalMovimentacaoCaixa } from '../components/ModalMovimentacaoCaixa';
 import { formatCurrencyBR } from '../utils/formatCurrencyBR';
 import { maskCurrencyInputBR } from '../utils/maskCurrencyInputBR';
 import { parseCurrencyBR } from '../utils/parseCurrencyBR';
+import { sideMenuItems } from "../components/layout";
+import { SideMenuList } from "../components/layout";
 
 
 function classNames(...parts: Array<string | false | null | undefined>) {
@@ -30,18 +32,9 @@ export default function GerenciarCaixa() {
   const [CaixaAberto, setCaixaAberto] = useState<Caixa | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const menuItems = [
-    { title: "Dashboard", icon: <LayoutDashboard size={24} />, path: "/dashboard" },
-    { title: "PDV / Vendas", icon: <ShoppingCart size={24} />, path: "/pdv" },
-    { title: "Histórico", icon: <History size={24} />, path: "/historico-vendas" },
-    { title: "Produtos", icon: <Package size={24} />, path: "/produtos" },
-    { title: "Caixa", icon: <Calculator size={24} />, path: "/caixa" },
-    { title: "Despesas", icon: <AlertCircle size={24} />, path: "/despesas" },
-    { title: "Relatórios", icon: <LayoutDashboard size={24} />, path: "/relatorios" },
-    { title: "Mensagens", icon: <MessageSquare size={24} />, path: "/mensagens", disabled: true, badge: "Em breve" },
-    { title: "Tarefas", icon: <CheckSquare size={24} />, path: "/tarefas", disabled: true, badge: "Em breve" },
-  ] as const;
-  const [valorInicialCentavos, setValorInicial] = useState(formatCurrencyBR(0)); const [isModalFecharOpen, setIsModalFecharOpen] = useState(false);
+  const menuItems = sideMenuItems;
+
+const [valorInicialCentavos, setValorInicial] = useState(formatCurrencyBR(0)); const [isModalFecharOpen, setIsModalFecharOpen] = useState(false);
   const [isModalMovimentarOpen, setIsModalMovimentarOpen] = useState(false);
   const [isFinalizando, setIsFinalizando] = useState(false);
 

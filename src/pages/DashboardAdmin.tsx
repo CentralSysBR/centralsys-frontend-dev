@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AlertCircle, Calculator, History, LayoutDashboard, Loader2, Lock, LogOut, Menu, Package, ShoppingCart, Unlock, X, MessageSquare, CheckSquare } from "lucide-react";
-
+import { AlertCircle, Calculator, History, LayoutDashboard, Loader2, Lock, LogOut, Menu, Package, ShoppingCart, TrendingUp, Unlock, Wallet, X } from "lucide-react";
+import { sideMenuItems } from "../components/layout";
+import { SideMenuList } from "../components/layout";
 import logo from "../assets/logo_full_color.svg";
 import { useAuth } from "../contexts/AuthContext";
 import { api } from "../services/api";
@@ -38,19 +39,9 @@ export default function DashboardAdmin() {
   const empresaNome = empresa?.nome ?? "—";
   const caixaStatus = data?.caixa.status ?? "FECHADO";
 
-  const menuItems = [
-    { title: "PDV / Vendas", icon: <ShoppingCart size={24} />, path: "/pdv" },
-    { title: "Histórico", icon: <History size={24} />, path: "/historico-vendas" },
-    { title: "Como está meu Estoque", icon: <Package size={24} />, path: "/produtos" },
-    { title: "Caixa", icon: <Calculator size={24} />, path: "/caixa" },
-    { title: "Despesas", icon: <AlertCircle size={24} />, path: "/despesas" },
-    { title: "Relatórios", icon: <LayoutDashboard size={24} />, path: "/relatorios" },
-    { title: "Mensagens", icon: <MessageSquare size={24} />, path: "/mensagens", disabled: true, badge: "Em breve" },
-    { title: "Tarefas", icon: <CheckSquare size={24} />, path: "/tarefas", disabled: true, badge: "Em breve" },
+  const menuItems = sideMenuItems;
 
-  ];
-
-  async function load() {
+async function load() {
     setLoading(true);
     setError(null);
     try {
@@ -83,6 +74,14 @@ export default function DashboardAdmin() {
   }, []);
 
   const lucroHoje = useMemo(() => formatCurrencyBR(data?.hoje.lucroCentavos), [data?.hoje.lucroCentavos]);
+
+  const lucroHojeCentavos = data?.hoje.lucroCentavos ?? 0;
+  const lucroHojeColor = lucroHojeCentavos < 0 ? "text-[#ff3131]" : "text-[#2D6A4F]";
+
+  const caixaAtualCentavos = data?.caixa.valorAtualCentavos ?? 0;
+  const caixaInicialCentavos = data?.caixa.valorInicialCentavos ?? 0;
+  const caixaTotalColor =
+    data?.caixa.status === "ABERTO" && caixaAtualCentavos <= caixaInicialCentavos ? "text-[#ff3131]" : "text-[#2D6A4F]";
   const entradasHoje = useMemo(() => formatCurrencyBR(data?.hoje.entradasCentavos), [data?.hoje.entradasCentavos]);
   const saidasHoje = useMemo(() => formatCurrencyBR(data?.hoje.despesasCentavos), [data?.hoje.despesasCentavos]);
 
@@ -175,61 +174,7 @@ export default function DashboardAdmin() {
             </button>
           </div>
 
-          <nav className="p-4 space-y-2">
-            {menuItems.map((item) => (
-              <button
-                key={item.title}
-                onClick={() => {
-                  if (item.disabled) return;
-                  navigate(item.path);
-                  setIsMenuOpen(false);
-                }}
-                className={classNames("w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors text-sm font-medium hover:bg-white/10", item.disabled && "opacity-50 cursor-not-allowed")}
-              >
-                <span className="text-white/90">{item.icon}</span>
-                <span className="flex-1 text-left">{item.title}</span>
-                {item.badge && (
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/15 text-white/80 font-bold">{item.badge}</span>
-                )}
-              </button>
-            ))}
-
-            <div className="pt-10 space-y-2">
-              <p className="px-4 text-[10px] font-bold text-gray-400 uppercase">Gestão de Caixa</p>
-
-              {caixaStatus === "ABERTO" ? (
-                <button
-                  onClick={() => {
-                    setIsMenuOpen(false);
-                    void handleChipCaixaClick();
-                  }}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-orange-200 hover:bg-orange-500/10"
-                >
-                  <Lock size={20} /> Fechar Expediente
-                </button>
-              ) : (
-                <button
-                  onClick={() => {
-                    setIsMenuOpen(false);
-                    void handleChipCaixaClick();
-                  }}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-green-200 hover:bg-green-500/10"
-                >
-                  <Unlock size={20} /> Abrir Caixa
-                </button>
-              )}
-            </div>
-
-            <div className="pt-10 space-y-2">
-              <p className="px-4 text-[10px] font-bold text-gray-400 uppercase">Sessão</p>
-              <button
-                onClick={() => void handleLogout()}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-200 hover:bg-red-500/10"
-              >
-                <LogOut size={20} /> Sair
-              </button>
-            </div>
-          </nav>
+          <SideMenuList items={menuItems} onSelect={(path) => { navigate(path); setIsMenuOpen(false); }} />
         </aside>
 
         {isMenuOpen && (
@@ -281,12 +226,12 @@ export default function DashboardAdmin() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               <section className="bg-white border rounded-2xl p-4 shadow-sm">
                 <div className="flex items-center justify-between">
-                  <div className="text-m font-semibold text-gray-500">Quanto eu Ganhei hoje?</div>
+                  <div className="flex items-center gap-2 text-m font-semibold text-gray-500"><TrendingUp size={16} /> <span>Quanto eu Ganhei hoje?</span></div>
                   <button onClick={() => navigate("/historico-vendas")} className="text-xs font-semibold text-[#1A2B3C] underline">
                     Ver Extrato
                   </button>
                 </div>
-                <div className="mt-2 text-3xl font-black text-[#1A2B3C]">{lucroHoje}</div>
+                <div className={classNames("mt-2 text-3xl font-black", lucroHojeColor)}>{lucroHoje}</div>
                 <div className="mt-3 flex align-left text-xs text-gray-600">
                   <span>Entradas: {entradasHoje}</span>
                   <span className="saidas">Saídas: {saidasHoje}</span>
@@ -295,12 +240,12 @@ export default function DashboardAdmin() {
 
               <section className="bg-white border rounded-2xl p-4 shadow-sm">
                 <div className="flex items-center justify-between">
-                  <div className="text-m font-semibold text-gray-500">Quanto eu tenho no <span className="font-bold">Caixa?</span></div>
+                  <div className="flex items-center gap-2 text-m font-semibold text-gray-500"><Wallet size={16} /> <span>Quanto eu tenho no <span className="font-bold">Caixa?</span></span></div>
                   <button onClick={() => navigate("/caixa")} className="text-xs font-semibold text-[#1A2B3C] underline">
                     Gerenciar Caixa
                   </button>
                 </div>
-                <div className="mt-2 text-3xl font-black text-[#1A2B3C]">{totalEmCaixa}</div>
+                <div className={classNames("mt-2 text-3xl font-black", data?.caixa.status === "ABERTO" ? caixaTotalColor : "text-[#1A2B3C]")}>{totalEmCaixa}</div>
                 {data.caixa.status === "ABERTO" ? (
                   <div className="mt-3 text-xs text-gray-600">Abriu com: {valorInicialCaixa}</div>
                 ) : (
@@ -310,7 +255,7 @@ export default function DashboardAdmin() {
 
               <section className="bg-white border rounded-2xl p-4 shadow-sm">
                 <div className="flex items-center justify-between">
-                  <div className="text-m font-semibold text-gray-500">Como está o meu <span className="font-bold">Estoque</span>?</div>
+                  <div className="flex items-center gap-2 text-m font-semibold text-gray-500"><Package size={16} /> <span>Como está o meu <span className="font-bold">Estoque</span>?</span></div>
                   <button onClick={() => navigate("/produtos")} className="text-xs font-semibold text-[#1A2B3C] underline">
                     Ver estoque
                   </button>
@@ -322,7 +267,7 @@ export default function DashboardAdmin() {
                     <span className="font-bold text-[#1A2B3C]">{data.produtos.emFalta}</span>
                   </div>
                   <div className="flex items-center justify-between rounded-xl bg-gray-50 px-3 py-2">
-                    <span className="text-gray-700">Produtos come <span className="ffde59 font-bold">ESTOQUE BAIXO</span></span>
+                    <span className="text-gray-700">Produtos com <span className="ffde59 font-bold">ESTOQUE BAIXO</span></span>
                     <span className="font-bold text-[#1A2B3C]">{data.produtos.estoqueBaixo}</span>
                   </div>
                   <div className="flex items-center justify-between rounded-xl bg-gray-50 px-3 py-2">
