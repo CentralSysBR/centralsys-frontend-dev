@@ -10,7 +10,7 @@ import { maskCurrencyInputBR } from '../utils/maskCurrencyInputBR';
 interface ItemCarrinho {
   id: string;
   nome: string;
-  precoVenda: number;
+  precoVendaCentavos: number;
   quantidade: number;
 }
 
@@ -63,7 +63,7 @@ export function ModalFinalizarVenda({
               {carrinho.map(item => (
                 <div key={item.id} className="flex justify-between text-sm items-center bg-gray-50 p-3 rounded-xl">
                   <span className="text-gray-600 font-medium">{item.quantidade}x {item.nome}</span>
-                  <span className="font-bold text-[#1A2B3C]">{formatCurrencyBR(item.precoVenda * item.quantidade)}</span>
+                  <span className="font-bold text-[#1A2B3C]">{formatCurrencyBR(item.precoVendaCentavos * item.quantidade)}</span>
                 </div>
               ))}
             </div>

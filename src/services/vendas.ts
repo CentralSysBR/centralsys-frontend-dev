@@ -7,8 +7,8 @@ import { api } from "./api";
 export interface VendaItem {
   id: string;
   quantidade: number;
-  precoUnitario: number;
-  precoTotal: number;
+  precoUnitarioCentavos: number;
+  precoTotalCentavos: number;
   produto: {
     nome: string;
   };
@@ -17,7 +17,7 @@ export interface VendaItem {
 export interface Venda {
   id: string;
   criadoEm: string;
-  valorTotal: number;
+  valorTotalCentavos: number;
   metodoPagamento: string;
 
   usuario: {

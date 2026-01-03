@@ -6,8 +6,8 @@ import { formatCurrencyBR } from '../utils/formatCurrencyBR';
 
 interface ResumoFechamento {
   caixa: {
-    valorInicial: number;
-    valorFinal: number;
+    valorInicialCentavos: number;
+    valorFinalCentavos: number;
   };
   resumo: {
     DINHEIRO: number;
@@ -93,7 +93,7 @@ export function ModalFecharCaixa({ caixaId, onClose, onSucesso }: ModalFecharCai
 
             <div className="bg-gray-900 p-6 rounded-[32px] text-center shadow-xl">
               <p className="text-white/40 text-[10px] font-black uppercase tracking-widest">Saldo Final Esperado</p>
-              <p className="text-white text-4xl font-black">{formatCurrencyBR(resultado.caixa.valorFinal)}</p>
+              <p className="text-white text-4xl font-black">{formatCurrencyBR(resultado.caixa.valorFinalCentavos)}</p>
             </div>
 
             <button

@@ -6,7 +6,7 @@ import { ModalNovaDespesa } from "../components/ModalNovaDespesa";
 interface Despesa {
   id: string;
   descricao: string;
-  valor: number;
+  valorCentavos: number;
   formaPagamento: string;
   status: string;
   dataDespesa: string;
@@ -109,7 +109,7 @@ export default function Despesas() {
               <tr key={despesa.id} className="border-t">
                 <td className="p-4 font-medium">{despesa.descricao}</td>
                 <td className="p-4 text-center font-bold text-red-600">
-                  R$ {despesa.valor.toFixed(2)}
+                  R$ {despesa.valorCentavos.toFixed(2)}
                 </td>
                 <td className="p-4 text-center">
                   {despesa.formaPagamento}

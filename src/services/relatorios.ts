@@ -54,21 +54,21 @@ export interface DashboardRelatorios {
   financeiro: {
     faturamentoTotal: number;
     totalVendas: number;
-    ticketMedio: number;
+    ticketMedioCentavos: number;
     porMetodo: {
       metodo: string;
-      valor: number;
+      valorCentavos: number;
     }[];
   };
   topProdutos: {
     nome: string;
     quantidade: number;
-    totalFaturado: number;
+    totalFaturadoCentavos: number;
   }[];
   estoque: {
     totalItens: number;
     alertaEstoqueBaixo: number;
-    valorTotalEstoque: number;
+    valorTotalEstoqueCentavos: number;
     itensCriticos: {
       nome: string;
       qtd: number;

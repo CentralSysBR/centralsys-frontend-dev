@@ -5,7 +5,7 @@ import { normalizeDisplayText } from '../utils/normalizeDisplayText';
 interface ProductCardProps {
     id: string;
     nome: string;
-    precoVenda: number;
+    precoVendaCentavos: number;
     quantidadeEstoque: number;
     imagemUrl?: string;
     quantidadeNoCarrinho?: number;
@@ -19,7 +19,7 @@ interface ProductCardProps {
 
 export function ProductCard({
     nome,
-    precoVenda,
+    precoVendaCentavos,
     quantidadeEstoque,
     imagemUrl,
     quantidadeNoCarrinho = 0,
@@ -76,7 +76,7 @@ export function ProductCard({
             {/* COLUNA DIREITA — preço + estoque */}
             <div className="flex flex-col items-end justify-center gap-1">
                 <span className="font-bold text-[#2D6A4F] text-sm">
-                    {formatCurrencyBR(precoVenda)}
+                    {formatCurrencyBR(precoVendaCentavos)}
                 </span>
 
                 {mode === 'estoque' && (

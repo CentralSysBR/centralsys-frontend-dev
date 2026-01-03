@@ -12,8 +12,8 @@ import { parseCurrencyBR } from '../utils/parseCurrencyBR';
 interface Caixa {
   id: string;
   status: 'ABERTO' | 'FECHADO';
-  valorInicial: number;
-  valorAtual?: number;
+  valorInicialCentavos: number;
+  valorAtualCentavos?: number;
   abertoEm: string;
 }
 
@@ -21,7 +21,7 @@ export default function GerenciarCaixa() {
   const navigate = useNavigate();
   const [CaixaAberto, setCaixaAberto] = useState<Caixa | null>(null);
   const [loading, setLoading] = useState(true);
-  const [valorInicial, setValorInicial] = useState(formatCurrencyBR(0)); const [isModalFecharOpen, setIsModalFecharOpen] = useState(false);
+  const [valorInicialCentavos, setValorInicial] = useState(formatCurrencyBR(0)); const [isModalFecharOpen, setIsModalFecharOpen] = useState(false);
   const [isModalMovimentarOpen, setIsModalMovimentarOpen] = useState(false);
   const [isFinalizando, setIsFinalizando] = useState(false);
 
@@ -42,7 +42,7 @@ export default function GerenciarCaixa() {
   }
 
   async function handleAbrirCaixa() {
-    const valor = parseCurrencyBR(valorInicial);
+    const valor = parseCurrencyBR(valorInicialCentavos);
 
     if (isNaN(valor) || valor < 0) {
       alert("Informe um valor inicial válido.");
@@ -51,7 +51,7 @@ export default function GerenciarCaixa() {
 
     try {
       setIsFinalizando(true);
-      await api.post('/caixas/abrir', { valorInicial: valor });
+      await api.post('/caixas/abrir', { valorInicialCentavos: valor });
       await fetchCaixaStatus();
     } catch (error: any) {
       alert(error.response?.data?.message || "Erro ao abrir caixa");
@@ -94,7 +94,7 @@ export default function GerenciarCaixa() {
                 inputMode="numeric"
                 placeholder="R$ 0,00"
                 className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl p-4 text-center text-2xl font-black text-[#1A2B3C] outline-none focus:border-blue-500 transition-all"
-                value={valorInicial}
+                value={valorInicialCentavos}
                 onChange={(e) => {
                   const masked = maskCurrencyInputBR(e.target.value);
                   setValorInicial(masked);
@@ -122,13 +122,13 @@ export default function GerenciarCaixa() {
 
                 <p className="text-white/50 text-[10px] font-black uppercase mb-1">Saldo Atual em Dinheiro</p>
                 <h2 className="text-5xl font-black mb-4 tracking-tighter">
-                  {formatCurrencyBR(CaixaAberto.valorAtual ?? CaixaAberto.valorInicial)}
+                  {formatCurrencyBR(CaixaAberto.valorAtualCentavos ?? CaixaAberto.valorInicialCentavos)}
                 </h2>
 
                 <div className="flex items-center gap-2 text-white/40">
                   <Wallet size={14} />
                   <p className="text-[11px] font-bold uppercase">
-                    Fundo Inicial: <span className="text-white/70">{formatCurrencyBR(CaixaAberto.valorInicial)}</span>
+                    Fundo Inicial: <span className="text-white/70">{formatCurrencyBR(CaixaAberto.valorInicialCentavos)}</span>
                   </p>
                 </div>
               </div>
