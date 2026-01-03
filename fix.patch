@@ -1,0 +1,130 @@
+--- a/src/components/ProductCard.tsx
++++ b/src/components/ProductCard.tsx
+@@ -5,7 +5,7 @@
+ interface ProductCardProps {
+     id: string;
+     nome: string;
+-    precoVenda: number;
++    precoVendaCentavos: number;
+     quantidadeEstoque: number;
+     imagemUrl?: string;
+     quantidadeNoCarrinho?: number;
+@@ -19,7 +19,7 @@
+ 
+ export function ProductCard({
+     nome,
+-    precoVenda,
++    precoVendaCentavos,
+     quantidadeEstoque,
+     imagemUrl,
+     quantidadeNoCarrinho = 0,
+@@ -76,7 +76,7 @@
+             <div className="flex flex-col items-end justify-center gap-1">
+                 <span className="font-bold text-[#2D6A4F] text-sm">
+-                    {formatCurrencyBR(precoVenda)}
++                    {formatCurrencyBR(precoVendaCentavos)}
+                 </span>
+ 
+                 {mode === 'estoque' && (
+--- a/src/pages/VendaDetalhe.tsx
++++ b/src/pages/VendaDetalhe.tsx
+@@ -44,7 +44,7 @@
+         <div className="bg-white rounded-xl border p-4">
+           <p className="text-sm text-gray-500">Total</p>
+           <p className="text-lg font-bold text-gray-900">
+-            Total: Total: {formatCurrencyBR(venda.valorTotal)}
++            Total: {formatCurrencyBR(venda.valorTotalCentavos)}
+           </p>
+         </div>
+       </div>
+@@ -66,12 +66,12 @@
+                 <td className="p-2">{item.produto.nome}</td>
+                
+                 <td className="p-2 text-right">{item.quantidade}</td>
+                 <td className="p-2 text-right">
+-                  {formatCurrencyBR(item.precoUnitario)}
++                  {formatCurrencyBR(item.precoUnitarioCentavos)}
+                 </td>
+                 <td className="p-2 text-right font-semibold">
+-                  {formatCurrencyBR(item.precoTotal)}
++                  {formatCurrencyBR(item.precoTotalCentavos)}
+                 </td>
+               </tr>
+             ))}
+--- a/src/services/produtos.ts
++++ b/src/services/produtos.ts
+@@ -75,13 +75,13 @@
+ export async function updateEstoqueProduto(
+   id: string,
+   quantidadeAdicionada: number,
+-  novoPrecoVenda?: number
++  novoPrecoVendaCentavos?: number
+ ) {
+   const response = await api.patch(`/produtos/${id}/estoque`, {
+     quantidadeAdicionada,
+-    novoPrecoVenda,
++    novoPrecoVendaCentavos,
+   });
+   return response.data;
+ }
+--- a/src/pages/Produtos.tsx
++++ b/src/pages/Produtos.tsx
+@@ -199,11 +199,11 @@
+     try {
+       setIsSalvando(true);
+       await api.patch(`/produtos/${produtoSelecionado.id}/estoque`, {
+         quantidadeAdicionada: qtdEntrada,
+-        novoPrecoVenda
++        novoPrecoVendaCentavos: novoPrecoVenda,
+       });
+       setIsModalEntradaOpen(false);
+       await carregarProdutos();
+     } finally {
+       setIsSalvando(false);
+     }
+   }
+--- a/src/components/ReciboVenda.tsx
++++ b/src/components/ReciboVenda.tsx
+@@ -6,7 +6,8 @@
+ interface ItemRecibo {
+   id: string;
+   nome: string;
+   quantidade: number;
+-  precoVenda: number;
++  precoVendaCentavos?: number;
++  precoVenda?: number;
+ }
+ 
+ interface ReciboVendaProps {
+   vendaId?: string;
+@@ -77,16 +78,22 @@
+           <div className="flex justify-between font-bold text-[10px] border-b border-gray-100 pb-1 uppercase">
+             <span>Item</span>
+             <span>Total</span>
+           </div>
+-          {itens.map((item, index) => (
+-            <div key={index} className="flex flex-col text-[11px]">
+-              <div className="flex justify-between">
+-                <span>{item.quantidade}x {item.nome}</span>
+-                <span>{formatCurrencyBR(item.quantidade * item.precoVenda)}</span>
+-
+-              </div>
+-              <span className="text-[9px] text-gray-400">UN: {formatCurrencyBR(item.precoVenda)}</span>
+-            </div>
+-          ))}
++          {itens.map((item, index) => {
++            const precoCentavos = item.precoVendaCentavos ?? item.precoVenda ?? 0;
++            const totalItemCentavos = item.quantidade * precoCentavos;
++            return (
++              <div key={index} className="flex flex-col text-[11px]">
++                <div className="flex justify-between">
++                  <span>{item.quantidade}x {item.nome}</span>
++                  <span>{formatCurrencyBR(totalItemCentavos)}</span>
++                </div>
++                <span className="text-[9px] text-gray-400">UN: {formatCurrencyBR(precoCentavos)}</span>
++              </div>
++            );
++          })}
+         </div>
+ 
+         <div className="border-t-2 border-dashed border-gray-200 pt-4 space-y-1">
