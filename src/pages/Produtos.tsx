@@ -17,6 +17,15 @@ import { formatCurrencyBR } from '../utils/formatCurrencyBR';
 import { maskCurrencyInputBR } from '../utils/maskCurrencyInputBR';
 import { parseCurrencyBR } from '../utils/parseCurrencyBR';
 
+import { useRef } from 'react';
+
+const SCAN_COOLDOWN_MS = 1200;
+const barcodeLockRef = useRef(false);
+const lastScanAtRef = useRef(0);
+
+const normalizarCodigo = (codigo: string) =>
+  codigo.replace(/\D/g, '').trim();
+
 
 interface Produto {
   id: string;
@@ -120,56 +129,85 @@ export default function Produtos() {
     };
   }, [isScannerOpen]);
 
-  async function handleBarcodeScanned(codigo: string) {
-    // 1️⃣ Produto já existe
-    const existente = produtos.find(p => p.codigoBarras === codigo);
+  async function handleBarcodeScanned(rawCodigo: string) {
+  const agora = Date.now();
+
+  // 🔒 Rate limit / lock para evitar leituras duplicadas
+  if (barcodeLockRef.current) return;
+  if (agora - lastScanAtRef.current < SCAN_COOLDOWN_MS) return;
+
+  barcodeLockRef.current = true;
+  lastScanAtRef.current = agora;
+
+  // 🧹 Normaliza código de barras (remove lixo do scanner)
+  const codigo = rawCodigo.replace(/\D/g, '').trim();
+
+  try {
+    // 1️⃣ Produto já existe no estoque
+    const existente = produtos.find(
+      p => p.codigoBarras?.replace(/\D/g, '') === codigo
+    );
+
     if (existente) {
       abrirEntrada(existente);
       return;
     }
 
     // 2️⃣ Consulta GTIN
-    try {
-      const response = await api.get<{ data: ProdutoGTINResponse }>(
-        `/produtos/gtin/${codigo}`
-      );
+    const response = await api.get<{ data: ProdutoGTINResponse }>(
+      `/produtos/gtin/${codigo}`
+    );
 
-      const gtin = response.data?.data;
+    const gtin = response.data?.data;
 
-      if (gtin) {
-        setFormNovo({
-          nome: gtin.nome ?? '',
-          categoria: gtin.categoria ?? 'Geral',
-          codigoBarras: gtin.codigoBarras ?? codigo,
-          imagemUrl: gtin.imagemUrl ?? '',
-          precoVendaCentavos: 0,
-          precoCustoCentavos: 0,
-          quantidadeEstoque: 0
-        });
+    if (gtin) {
+      setFormNovo({
+        nome: gtin.nome ?? '',
+        categoria: gtin.categoria ?? 'Geral',
+        codigoBarras: gtin.codigoBarras ?? codigo,
+        imagemUrl: gtin.imagemUrl ?? '',
+        precoVendaCentavos: 0,
+        precoCustoCentavos: 0,
+        quantidadeEstoque: 0
+      });
 
-        // Inicializa inputs mascarados
-        setPrecoCustoInput(formatCurrencyBR(0));
-        setValorLoteInput(formatCurrencyBR(0));
-        setPrecoVendaInput(formatCurrencyBR(0));
-      } else {
-        setFormNovo(prev => ({
-          ...prev,
-          codigoBarras: codigo
-        }));
-        setPrecoCustoInput(formatCurrencyBR(0));
-        setValorLoteInput(formatCurrencyBR(0));
-        setPrecoVendaInput(formatCurrencyBR(0));
-      }
-
-      setIsModalNovoOpen(true);
-    } catch {
+      // Inicializa inputs mascarados
+      setPrecoCustoInput(formatCurrencyBR(0));
+      setValorLoteInput(formatCurrencyBR(0));
+      setPrecoVendaInput(formatCurrencyBR(0));
+    } else {
       setFormNovo(prev => ({
         ...prev,
         codigoBarras: codigo
       }));
-      setIsModalNovoOpen(true);
+
+      setPrecoCustoInput(formatCurrencyBR(0));
+      setValorLoteInput(formatCurrencyBR(0));
+      setPrecoVendaInput(formatCurrencyBR(0));
     }
+
+    setIsModalNovoOpen(true);
+
+  } catch {
+    // Fallback seguro caso GTIN falhe
+    setFormNovo(prev => ({
+      ...prev,
+      codigoBarras: codigo
+    }));
+
+    setPrecoCustoInput(formatCurrencyBR(0));
+    setValorLoteInput(formatCurrencyBR(0));
+    setPrecoVendaInput(formatCurrencyBR(0));
+
+    setIsModalNovoOpen(true);
+  } finally {
+    // 🔓 Libera leitura após cooldown
+    setTimeout(() => {
+      barcodeLockRef.current = false;
+    }, SCAN_COOLDOWN_MS);
   }
+}
+
 
   // Calculadora de custo
   useEffect(() => {
